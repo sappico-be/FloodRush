@@ -43,7 +43,8 @@ class GameViewModel: ObservableObject {
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
-            totalScore: 0
+            totalScore: 0,
+            gameHistory: []
         )
         
         initializeGame()
@@ -55,6 +56,15 @@ class GameViewModel: ObservableObject {
     }
 
     func makeMove(color: Color, onCellsGained: ((Int, CGPoint) -> Void)? = nil) {
+        // Bewaar huidige state in history voordat we de move maken
+        let historyEntry = GameHistoryEntry(
+            grid: gameState.grid,
+            currentPlayerArea: gameState.currentPlayerArea,
+            moveCount: gameState.moveCount,
+            totalScore: gameState.totalScore
+        )
+        gameState.gameHistory.append(historyEntry)
+        
         // Bewaar oude area
         let oldPlayerArea = gameState.currentPlayerArea
         
@@ -113,6 +123,24 @@ class GameViewModel: ObservableObject {
         }
         
         return visited
+    }
+
+    func undoLastMove() -> Bool {
+        guard !gameState.gameHistory.isEmpty else { return false }
+        
+        let previousState = gameState.gameHistory.removeLast()
+        
+        gameState.grid = previousState.grid
+        gameState.currentPlayerArea = previousState.currentPlayerArea
+        gameState.moveCount = previousState.moveCount
+        gameState.totalScore = previousState.totalScore
+        gameState.isCompleted = false // Reset completion state
+        
+        return true
+    }
+
+    var canUndo: Bool {
+        return !gameState.gameHistory.isEmpty
     }
     
     private func checkWinCondition() {

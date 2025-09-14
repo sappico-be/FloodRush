@@ -9,6 +9,7 @@ struct GameState {
     var moveCount: Int
     var isCompleted: Bool
     var totalScore: Int
+    var gameHistory: [GameHistoryEntry] = []
     
     // Available colors static property
     static let availableColors: [Color] = [.red, .blue, .green, .yellow, .orange, .purple]

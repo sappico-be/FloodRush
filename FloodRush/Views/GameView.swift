@@ -74,7 +74,21 @@ struct GameView: View {
                 AnimatedScoreView(targetScore: viewModel.gameState.totalScore)
             }
             Spacer()
-            Text("Progress: \(viewModel.gameState.currentPlayerArea.count)/\(viewModel.gameState.gridSize * viewModel.gameState.gridSize)")
+            
+            VStack {
+                // Undo button
+                Button(action: {
+                    let _ = viewModel.undoLastMove()
+                }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.title2)
+                        .foregroundColor(viewModel.canUndo ? .blue : .gray)
+                }
+                .disabled(!viewModel.canUndo)
+                
+                Text("Progress: \(viewModel.gameState.currentPlayerArea.count)/\(viewModel.gameState.gridSize * viewModel.gameState.gridSize)")
+                    .font(.caption)
+            }
         }
     }
 

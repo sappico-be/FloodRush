@@ -34,15 +34,30 @@ class GameViewModel: ObservableObject {
         }
     }
 
+    func resetGame() {
+        gameState = GameState(
+            gridSize: gameState.gridSize,
+            colorCount: gameState.colorCount,
+            startPosition: gameState.startPosition,
+            grid: Array(repeating: Array(repeating: Color.gray, count: gameState.gridSize), count: gameState.gridSize),
+            currentPlayerArea: [],
+            moveCount: 0,
+            isCompleted: false,
+            totalScore: 0
+        )
+        
+        initializeGame()
+    }
+
     private func updatePlayerArea() {
         // Initieel alleen de startpositie
         gameState.currentPlayerArea = [gameState.startPosition]
     }
 
-    func makeMove(color: Color) {
-        // Bewaar oude area size
-        let oldAreaSize = gameState.currentPlayerArea.count
-
+    func makeMove(color: Color, onCellsGained: ((Int, CGPoint) -> Void)? = nil) {
+        // Bewaar oude area
+        let oldPlayerArea = gameState.currentPlayerArea
+        
         // Update de kleur van alle huidige player area cellen
         for position in gameState.currentPlayerArea {
             gameState.grid[position.row][position.col] = color
@@ -50,15 +65,30 @@ class GameViewModel: ObservableObject {
         
         // Nu uitbreiden naar aangrenzende cellen van deze kleur
         gameState.currentPlayerArea = getConnectedArea(from: gameState.startPosition, with: color)
-
-        // Bereken punten exponentieel
-        let newAreaSize = gameState.currentPlayerArea.count
-        let cellsGained = newAreaSize - oldAreaSize
-        let pointsEarned = cellsGained * cellsGained
+        
+        // Bereken nieuwe cellen
+        let newCells = gameState.currentPlayerArea.subtracting(oldPlayerArea)
+        let cellsGained = newCells.count
+        let pointsEarned = cellsGained * cellsGained * 10
         
         gameState.moveCount += 1
-        gameState.totalScore += pointsEarned * 10
+        gameState.totalScore += pointsEarned
+        
+        // Debug print
+        print("Cells gained: \(cellsGained), Points: \(pointsEarned)")
+        
+        // Trigger particle effect vanaf center van nieuwe cellen
+        if cellsGained > 0, let callback = onCellsGained {
+            let centerPosition = GridPositionHelper.shared.getCenterPosition(for: newCells)
+            print("Triggering particle at: \(centerPosition)")
+            callback(pointsEarned, centerPosition)
+        }
 
+        if cellsGained > 0 {
+            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+            impactFeedback.impactOccurred()
+        }
+        
         // Check win condition
         checkWinCondition()
     }

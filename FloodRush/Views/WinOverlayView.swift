@@ -12,6 +12,7 @@ struct WinOverlayView: View {
     
     let moveCount: Int
     let score: Int
+    let onResetGame: (() -> Void)?
     
     var body: some View {
         ZStack {
@@ -111,25 +112,47 @@ struct WinOverlayView: View {
                         .shadow(color: .blue, radius: 8)
                 }
                 
-                // Next level button
-                Button("🌟 NEXT LEVEL 🌟") {
-                    // TODO: Handle next level
-                }
-                .font(.title2)
-                .fontWeight(.bold)
-                .padding(.horizontal, 30)
-                .padding(.vertical, 15)
-                .background(
-                    LinearGradient(
-                        colors: [.yellow, .orange],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                VStack(spacing: 15) {
+                    // Next level button
+                    Button("🌟 NEXT LEVEL 🌟") {
+                        // TODO: Handle next level later
+                    }
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 15)
+                    .background(
+                        LinearGradient(
+                            colors: [.yellow, .orange],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                )
-                .foregroundColor(.black)
-                .cornerRadius(25)
-                .shadow(color: .yellow, radius: 15)
-                .scaleEffect(textScale)
+                    .foregroundColor(.black)
+                    .cornerRadius(25)
+                    .shadow(color: .yellow, radius: 15)
+                    .scaleEffect(textScale)
+                    
+                    // Reset/Play Again button
+                    Button("🔄 PLAY AGAIN") {
+                        onResetGame?() // Callback naar GameView
+                    }
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 25)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+                    .shadow(color: .blue, radius: 10)
+                    .scaleEffect(textScale)
+                }
             }
             .scaleEffect(scale)
         }

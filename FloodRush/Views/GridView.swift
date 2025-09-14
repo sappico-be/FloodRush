@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GridView: View {
     let gameState: GameState
+    let onCellsGained: ((Int, CGPoint) -> Void)?
     let screenPadding: CGFloat = 30
     let spacing: CGFloat = 2
 
@@ -28,22 +29,24 @@ struct GridView: View {
             }
             .frame(width: availableWidth, height: availableWidth)
             .cornerRadius(8)
+            .background(
+                // Invisible background to capture the grid's position
+                Color.clear
+                    .onAppear {
+                        // Store grid info for position calculation
+                        GridPositionHelper.shared.updateGridInfo(
+                            frame: CGRect(x: geometry.frame(in: .global).minX,
+                                        y: geometry.frame(in: .global).minY,
+                                        width: availableWidth,
+                                        height: availableWidth),
+                            cellSize: cellSize,
+                            spacing: spacing,
+                            gridSize: gameState.gridSize
+                        )
+                    }
+
+            )
         }
         .aspectRatio(1, contentMode: .fit) // Houdt grid vierkant
-    }
-}
-
-struct CellView: View {
-    let color: Color
-    let isInPlayerArea: Bool
-    
-    var body: some View {
-        Rectangle()
-            .fill(color)
-            .overlay(
-                // Border om player area te tonen
-                Rectangle()
-                    .stroke(isInPlayerArea ? Color.yellow : Color.clear, lineWidth: 2)
-            )
     }
 }

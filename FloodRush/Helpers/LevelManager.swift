@@ -12,6 +12,8 @@ class LevelManager: ObservableObject {
     @Published var levelsCompleted: Int = 0
     @Published var levelScores: [Int: Int] = [:] // levelId -> score
     @Published var levelStars: [Int: Int] = [:] // levelId -> stars
+    @Published var currentLives: Int = 3
+    @Published var maxLives: Int = 3
     
     init() {
         // Pack 1: Starter Pack (6x6 grids)
@@ -23,6 +25,7 @@ class LevelManager: ObservableObject {
                 gridSize: 6,
                 colorCount: min(3 + (levelNum - 1) / 5, 4), // Start 3 kleuren, naar 4
                 startPosition: GridPosition(row: 0, col: 0),
+                targetColor: Color.green,
                 targetStars: [100, 300, 500]
             )
         }
@@ -35,7 +38,8 @@ class LevelManager: ObservableObject {
                 levelInPack: levelNum,
                 gridSize: 8,
                 colorCount: min(3 + (levelNum - 1) / 4, 5), // Start 3, naar 5
-                startPosition: GridPosition(row: 1, col: 1), // Andere start positie
+                startPosition: GridPosition(row: 1, col: 1), // Andere start positie,
+                targetColor: nil,
                 targetStars: [200, 600, 1000]
             )
         }
@@ -49,6 +53,7 @@ class LevelManager: ObservableObject {
                 gridSize: 10,
                 colorCount: min(4 + (levelNum - 1) / 3, 6), // Start 4, naar 6
                 startPosition: GridPosition(row: 2, col: 2),
+                targetColor: nil,
                 targetStars: [500, 1200, 2000]
             )
         }
@@ -177,5 +182,18 @@ class LevelManager: ObservableObject {
     
     func getStarsForLevel(_ levelId: Int) -> Int {
         return levelStars[levelId] ?? 0
+    }
+
+    func loseLife() -> Bool {
+        currentLives = max(0, currentLives - 1)
+        return currentLives > 0 // Return true als je nog levens hebt
+    }
+    
+    func resetLives() {
+        currentLives = maxLives
+    }
+    
+    func hasLivesRemaining() -> Bool {
+        return currentLives > 0
     }
 }

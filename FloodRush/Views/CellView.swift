@@ -19,7 +19,7 @@ struct CellView: View {
             .fill(animatedColor)
             .overlay(
                 Rectangle()
-                    .stroke(isInPlayerArea ? Color.yellow : Color.clear, lineWidth: 2)
+                    .stroke(isInPlayerArea ? Color.black : Color.clear, lineWidth: 2)
             )
             .scaleEffect(isAnimating ? 1.1 : 1.0)
             .onChange(of: color) { _, newColor in

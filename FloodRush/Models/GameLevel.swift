@@ -7,6 +7,7 @@ struct GameLevel {
     let gridSize: Int
     let colorCount: Int
     let startPosition: GridPosition
+    let targetColor: Color?
     let targetStars: [Int] // Punten nodig voor 1, 2, 3 sterren
     
     var displayName: String {

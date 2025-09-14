@@ -8,150 +8,170 @@ struct HomeScreenView: View {
     let onSettingsTapped: (() -> Void)?
     
     var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
+        ZStack(alignment: .top) {
+            HStack {
+                livesButton
+                Spacer()
+                pointsView
+            }
+            .padding(.top, 0)
+
             VStack(spacing: 40) {
-                HStack {
-                    Spacer()
-                    
-                    Button(action: {
-                        SoundManager.shared.playButtonTapSound()
-                        onSettingsTapped?() // Nieuwe callback
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                            .foregroundColor(.primary)
-                            .padding(12)
-                            .background(Color(.systemBackground))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.1), radius: 4)
-                    }
-                }
-                .padding(.horizontal)
-    
-                Spacer()
-                
                 // Game title
-                VStack(spacing: 10) {
-                    Text("🌊 FloodRush")
-                        .font(.largeTitle)
-                        .fontWeight(.black)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                    
-                    Text("Conquer the Grid")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-                
-                // Player stats
-                VStack(spacing: 15) {
-                    StatCardView(
-                        title: "Total Score",
-                        value: "\(levelManager.totalScore)",
-                        icon: "🏆"
-                    )
-                    
-                    HStack(spacing: 20) {
-                        StatCardView(
-                            title: "Levels",
-                            value: "\(levelManager.levelsCompleted)",
-                            icon: "🎯"
-                        )
-                        
-                        StatCardView(
-                            title: "Stars",
-                            value: "\(levelManager.totalStarsEarned)",
-                            icon: "⭐"
-                        )
-                    }
-                }
-                
-                Spacer()
+                Image("ignite_grid_logo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 175)
+                    .clipped()
+                    .padding(.top, 65.0)
                 
                 // Main buttons
-                VStack(spacing: 20) {
+                VStack(alignment: .center, spacing: 40.0) {
                     // Big Play button
-                    Button(action: {
-                        SoundManager.shared.playButtonTapSound()
-                        SoundManager.shared.lightHaptic()
-                        onPlayTapped()
-                    }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "play.fill")
-                                .font(.title2)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("PLAY")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                
-                                if let nextLevel = levelManager.getNextUnlockedLevel(),
-                                   let pack = levelManager.getCurrentProgressPack() {
-                                    Text("\(pack.emoji) Level \(nextLevel.levelInPack)")
-                                        .font(.caption)
-                                        .opacity(0.8)
-                                }
-                            }
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                        .background(
-                            LinearGradient(
-                                colors: [.green, .blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(16)
-                        .shadow(color: .green.opacity(0.4), radius: 10)
-                    }
-                    
-                    // Level Packs button
-                    Button(action: {
-                        SoundManager.shared.playButtonTapSound()
-                        onLevelPacksTapped()
-                    }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "square.grid.3x3")
-                                .font(.title2)
-                            
-                            Text("LEVEL PACKS")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [.purple, .blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(16)
-                        .shadow(color: .purple.opacity(0.4), radius: 8)
-                    }
+                    startButton
+                    levelsButton
                 }
-                .padding(.horizontal, 30)
                 
                 Spacer()
+
+                HStack {
+                    Spacer()
+                    settingsButton
+                }
             }
-            .padding()
         }
+        .padding(.horizontal)
+        .background(
+            Image("ignite_grid_background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
+    }
+
+    private var livesButton: some View {
+        ZStack(alignment: .leading) {
+            Image("icon_heart")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 50)
+                .padding(.leading, 0.0)
+            Text("\(levelManager.currentLives)")
+                .font(.custom("FredokaOne-Regular", size: 16.0))
+                .foregroundStyle(.white)
+                .padding(.leading, 20.0)
+                .padding(.top, -5.0)
+                .frame(width: 35.0)
+
+            Button {
+                // ACTION LATER
+            } label: {
+                EmptyView()
+            }
+            .buttonStyle(
+                ImageButtonStyle(
+                    normalImage: "icon_add_button",
+                    pressedImage: "icon_add_button",
+                    height: 40
+                )
+            )
+            .padding(.leading, 30.0)
+            .padding(.top, 35.0)
+
+        }
+    }
+
+    private var pointsView: some View {
+        ZStack(alignment: .trailing) {
+            Image("coins_background")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 45)
+                .padding(.trailing, 25.0)
+            
+            Text("\(levelManager.totalScore)")
+                .font(.custom("FredokaOne-Regular", size: 16.0))
+                .foregroundStyle(Color(red: 157/255.0, green: 97/255.0, blue: 99/255.0))
+                .padding(.trailing, 50.0)
+            
+            Button {
+                // ACTION LATER
+            } label: {
+                EmptyView()
+            }
+            .buttonStyle(
+                ImageButtonStyle(
+                    normalImage: "icon_add_button",
+                    pressedImage: "icon_add_button",
+                    height: 40
+                )
+            )
+            .padding(.trailing, 0.0)
+        }
+    }
+
+    private var startButton: some View {
+        Button(action: {
+            SoundManager.shared.playButtonTapSound()
+            SoundManager.shared.lightHaptic()
+            onPlayTapped()
+        }) {
+            EmptyView()
+        }
+        .buttonStyle(
+            ImageButtonStyle(
+                normalImage: "start_button",
+                pressedImage: "start_button",
+                height: 80.0
+            )
+        )
+    }
+
+    private var levelsButton: some View {
+        Button(action: {
+            SoundManager.shared.playButtonTapSound()
+            SoundManager.shared.lightHaptic()
+            onLevelPacksTapped()
+        }) {
+            EmptyView()
+        }
+        .buttonStyle(
+            ImageButtonStyle(
+                normalImage: "levels_button",
+                pressedImage: "levels_button",
+                height: 60.0
+            )
+        )
+    }
+
+    private var settingsButton: some View {
+        Button(action: {
+            SoundManager.shared.playButtonTapSound()
+            onSettingsTapped?() // Nieuwe callback
+        }) {
+            EmptyView()
+        }
+        .buttonStyle(
+            ImageButtonStyle(
+                normalImage: "settings_button",
+                pressedImage: "settings_button",
+                height: 40.0
+            )
+        )
+    }
+}
+
+struct ImageButtonStyle: ButtonStyle {
+    let normalImage: String
+    let pressedImage: String
+    let height: CGFloat
+    
+    func makeBody(configuration: Configuration) -> some View {
+        Image(configuration.isPressed ? pressedImage : normalImage)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(height: height)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }

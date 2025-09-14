@@ -3,6 +3,7 @@ import AVFoundation
 
 struct ColorPickerView: View {
     let availableColors: [Color]
+    let targetColor: Color?
     let isDisabled: Bool
     let onColorSelected: (Color) -> Void
     
@@ -23,6 +24,15 @@ struct ColorPickerView: View {
                             Circle()
                                 .stroke(Color.black, lineWidth: 2)
                         )
+                        .overlay {
+                            // Target indicator
+                            if color == targetColor {
+                                Image(systemName: "target")
+                                    .font(.title3)
+                                    .foregroundColor(.white)
+                                    .shadow(color: .black, radius: 2)
+                            }
+                        }
                 }
                 .disabled(isDisabled)
                 .opacity(isDisabled ? 0.5 : 1.0)

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ignite_grid_background.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

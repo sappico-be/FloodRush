@@ -14,6 +14,7 @@ class GameViewModel: ObservableObject {
             gridSize: level.gridSize,
             colorCount: level.colorCount,
             startPosition: level.startPosition,
+            targetColor: level.targetColor,
             grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
@@ -30,6 +31,7 @@ class GameViewModel: ObservableObject {
             gridSize: level.gridSize,
             colorCount: level.colorCount,
             startPosition: level.startPosition,
+            targetColor: level.targetColor,
             grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
@@ -61,6 +63,7 @@ class GameViewModel: ObservableObject {
             gridSize: gameState.gridSize,
             colorCount: gameState.colorCount,
             startPosition: gameState.startPosition,
+            targetColor: gameState.targetColor,
             grid: Array(repeating: Array(repeating: Color.gray, count: gameState.gridSize), count: gameState.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
@@ -197,22 +200,58 @@ class GameViewModel: ObservableObject {
     
     private func checkWinCondition() {
         if gameState.currentPlayerArea.count == gameState.gridSize * gameState.gridSize {
-            gameState.isCompleted = true
-            
-            // Bereken sterren gebaseerd op score
-            let stars = calculateStars()
-
-            // Play level complete sound
-            SoundManager.shared.playLevelCompleteSound()
-            SoundManager.shared.successHaptic()
-            
-            // Mark level as completed met score en sterren
-            levelManager.completeLevel(
-                levelManager.currentLevel.id,
-                withScore: gameState.totalScore,
-                stars: stars
-            )
+            // Check of target kleur wordt gehaald (als er een target is)
+            if let targetColor = gameState.targetColor {
+                let currentGridColor = gameState.grid[gameState.startPosition.row][gameState.startPosition.col]
+                
+                if currentGridColor == targetColor {
+                    // Win: alle cellen + juiste kleur
+                    gameState.isCompleted = true
+                    let stars = calculateStars()
+                    SoundManager.shared.playLevelCompleteSound()
+                    SoundManager.shared.successHaptic()
+                    levelManager.completeLevel(levelManager.currentLevel.id, withScore: gameState.totalScore, stars: stars)
+                } else {
+                    // Wrong color - lose a life
+                    let hasLivesLeft = levelManager.loseLife()
+                    
+                    if hasLivesLeft {
+                        // Reset level met feedback
+                        resetLevelWithLifeLoss()
+                    } else {
+                        // Game over
+                        triggerGameOver()
+                    }
+                }
+            } else {
+                // Geen target kleur constraint - gewoon alle cellen is genoeg
+                gameState.isCompleted = true
+                let stars = calculateStars()
+                SoundManager.shared.playLevelCompleteSound()
+                SoundManager.shared.successHaptic()
+                levelManager.completeLevel(levelManager.currentLevel.id, withScore: gameState.totalScore, stars: stars)
+            }
         }
+    }
+
+    private func resetLevelWithLifeLoss() {
+        SoundManager.shared.errorHaptic()
+        
+        // Reset game state maar behoud level
+        gameState.grid = Array(repeating: Array(repeating: Color.gray, count: gameState.gridSize), count: gameState.gridSize)
+        gameState.currentPlayerArea = []
+        gameState.moveCount = 0
+        gameState.totalScore = 0
+        gameState.gameHistory = []
+        gameState.isCompleted = false
+        
+        // Regenereer level
+        initializeGame()
+    }
+
+    private func triggerGameOver() {
+        SoundManager.shared.errorHaptic()
+        gameState.isCompleted = true // Dit triggert de overlay, maar dan voor game over
     }
 
     private func calculateStars() -> Int {

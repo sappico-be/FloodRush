@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct GameView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @ObservedObject var viewModel: GameViewModel
     let levelManager: LevelManager
     let onBackToLevelSelect: (() -> Void)?
@@ -25,6 +27,7 @@ struct GameView: View {
                 // Color Picker
                 ColorPickerView(
                     availableColors: Array(GameState.availableColors.prefix(viewModel.gameState.colorCount)),
+                    targetColor: viewModel.gameState.targetColor,
                     isDisabled: viewModel.gameState.isCompleted,
                     onColorSelected: { color in
                         viewModel.makeMove(color: color) { pointsEarned, centerPosition in
@@ -51,41 +54,68 @@ struct GameView: View {
             
             // Win overlay
             if viewModel.gameState.isCompleted {
-                WinOverlayView(
-                    moveCount: viewModel.gameState.moveCount,
-                    score: viewModel.gameState.totalScore,
-                    onResetGame: {
-                        viewModel.resetGame()
-                    },
-                    onNextLevel: {
-                        let _ = viewModel.goToNextLevel()
-                    },
-                    hasNextLevel: viewModel.hasNextLevel
-                )
+                if levelManager.hasLivesRemaining() {
+                    WinOverlayView(
+                        moveCount: viewModel.gameState.moveCount,
+                        score: viewModel.gameState.totalScore,
+                        onResetGame: {
+                            viewModel.resetGame()
+                        },
+                        onNextLevel: {
+                            let _ = viewModel.goToNextLevel()
+                        },
+                        hasNextLevel: viewModel.hasNextLevel
+                    )
+                } else {
+                    GameOverOverlayView(
+                        onRetry: {
+                            levelManager.resetLives()
+                            viewModel.resetGame()
+                        },
+                        onBackToHome: {
+                            levelManager.resetLives()
+                            onBackToLevelSelect?()
+                        }
+                    )
+                }
             }
         }
+        .background(
+            Image("ignite_grid_background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
     }
 
     var headerView: some View {
         Group {
             HStack {
-                Button(action: {
-                    onBackToLevelSelect?() // Callback naar ContentView
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Levels")
-                    }
-                    .foregroundColor(.blue)
-                    .font(.headline)
+                Button {
+                    onBackToLevelSelect?()
+                } label: {
+                    EmptyView()
                 }
+                .buttonStyle(
+                    ImageButtonStyle(
+                        normalImage: "close_button",
+                        pressedImage: "close_button",
+                        height: 30
+                    )
+                )
                 
                 Spacer()
                 
                 // Level info
-                Text("\(levelManager.currentPack.emoji) Level \(levelManager.currentLevel.levelInPack)")
-                    .font(.headline)
-                    .fontWeight(.bold)
+                let text = "Level \(levelManager.currentLevel.levelInPack)"
+                Text(text)
+                    .font(.custom("FredokaOne-Regular", size: 28))
+                    .foregroundStyle(.white)
+                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 0, y: -1)
+                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: -2, y: 0)
+                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 0, y: 2)
+                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 2, y: 0)
+                
                 
                 Spacer()
                 
@@ -102,6 +132,22 @@ struct GameView: View {
                 Spacer()
                 
                 VStack {
+                    if let targetColor = viewModel.gameState.targetColor {
+                        VStack(spacing: 4) {
+                            Text("Target:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            
+                            Circle()
+                                .fill(targetColor)
+                                .frame(width: 25, height: 25)
+                                .overlay(
+                                    Circle()
+                                        .stroke(.black, lineWidth: 1)
+                                )
+                        }
+                    }
+                    
                     // Undo button
                     Button(action: {
                         let _ = viewModel.undoLastMove()
@@ -143,6 +189,49 @@ struct GameView: View {
             }
         }
     }
+}
 
+extension View {
+    func stroke(color: Color, width: CGFloat = 1) -> some View {
+        modifier(StrokeModifier(strokeSize: width, strokeColor: color))
+    }
+}
+
+struct StrokeModifier: ViewModifier {
+    private let id = UUID()
+    var strokeSize: CGFloat = 1
+    var strokeColor: Color = .blue
     
+    func body(content: Content) -> some View {
+        if strokeSize > 0 {
+            appliedStrokeBackground(content: content)
+        } else {
+            content
+        }
+    }
+    
+    private func appliedStrokeBackground(content: Content) -> some View {
+        content
+            .padding(strokeSize*2)
+            .background(
+                Rectangle()
+                    .foregroundColor(strokeColor)
+                    .mask(alignment: .center) {
+                        mask(content: content)
+                    }
+            )
+    }
+    
+    func mask(content: Content) -> some View {
+        Canvas { context, size in
+            context.addFilter(.alphaThreshold(min: 0.01))
+            if let resolvedView = context.resolveSymbol(id: id) {
+                context.draw(resolvedView, at: .init(x: size.width/2, y: size.height/2))
+            }
+        } symbols: {
+            content
+                .tag(id)
+                .blur(radius: strokeSize)
+        }
+    }
 }

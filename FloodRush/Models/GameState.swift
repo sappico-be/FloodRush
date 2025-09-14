@@ -4,6 +4,7 @@ struct GameState {
     let gridSize: Int
     let colorCount: Int
     let startPosition: GridPosition
+    let targetColor: Color?
     var grid: [[Color]]
     var currentPlayerArea: Set<GridPosition>
     var moveCount: Int

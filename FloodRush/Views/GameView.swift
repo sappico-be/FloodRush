@@ -1,16 +1,11 @@
 import SwiftUI
 
 struct GameView: View {
+    @ObservedObject var viewModel: GameViewModel
+    let levelManager: LevelManager
+    let onBackToLevelSelect: (() -> Void)?
     @State private var particles: [ParticleData] = []
     @State private var scorePosition: CGPoint = CGPoint(x: 100, y: 120)
-    @StateObject private var viewModel = GameViewModel(
-        gridSize: 4,
-        colorCount: 2,
-        startPosition: GridPosition(
-            row: 0,
-            col: 0
-        )
-    )
 
     var body: some View {
         ZStack {
@@ -61,33 +56,65 @@ struct GameView: View {
                     score: viewModel.gameState.totalScore,
                     onResetGame: {
                         viewModel.resetGame()
-                    }
+                    },
+                    onNextLevel: {
+                        let _ = viewModel.goToNextLevel()
+                    },
+                    hasNextLevel: viewModel.hasNextLevel
                 )
             }
         }
     }
 
     var headerView: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("Moves: \(viewModel.gameState.moveCount)")
-                AnimatedScoreView(targetScore: viewModel.gameState.totalScore)
-            }
-            Spacer()
-            
-            VStack {
-                // Undo button
+        Group {
+            HStack {
                 Button(action: {
-                    let _ = viewModel.undoLastMove()
+                    onBackToLevelSelect?() // Callback naar ContentView
                 }) {
-                    Image(systemName: "arrow.uturn.backward")
-                        .font(.title2)
-                        .foregroundColor(viewModel.canUndo ? .blue : .gray)
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Levels")
+                    }
+                    .foregroundColor(.blue)
+                    .font(.headline)
                 }
-                .disabled(!viewModel.canUndo)
                 
-                Text("Progress: \(viewModel.gameState.currentPlayerArea.count)/\(viewModel.gameState.gridSize * viewModel.gameState.gridSize)")
-                    .font(.caption)
+                Spacer()
+                
+                // Level info
+                Text("\(levelManager.currentPack.emoji) Level \(levelManager.currentLevel.levelInPack)")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                
+                Spacer()
+                
+                // Placeholder voor symmetrie
+                Text("Levels")
+                    .opacity(0)
+            }
+            
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Moves: \(viewModel.gameState.moveCount)")
+                    AnimatedScoreView(targetScore: viewModel.gameState.totalScore)
+                }
+                Spacer()
+                
+                VStack {
+                    // Undo button
+                    Button(action: {
+                        let _ = viewModel.undoLastMove()
+                    }) {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.title2)
+                            .foregroundColor(viewModel.canUndo ? .blue : .gray)
+                    }
+                    .disabled(!viewModel.canUndo)
+                    
+                    Text("Progress: \(viewModel.gameState.currentPlayerArea.count)/\(viewModel.gameState.gridSize * viewModel.gameState.gridSize)")
+                        .font(.caption)
+                }
             }
         }
     }

@@ -1,19 +1,41 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 class GameViewModel: ObservableObject {
     @Published private(set) var gameState: GameState
+    let levelManager: LevelManager
 
-    init(gridSize: Int, colorCount: Int, startPosition: GridPosition) {
+    init(levelManager: LevelManager) {
+        self.levelManager = levelManager
+        let level = levelManager.currentLevel
+        
         self.gameState = GameState(
-            gridSize: gridSize,
-            colorCount: colorCount,
-            startPosition: startPosition,
-            grid: Array(repeating: Array(repeating: Color.gray, count: gridSize), count: gridSize),
+            gridSize: level.gridSize,
+            colorCount: level.colorCount,
+            startPosition: level.startPosition,
+            grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
-            totalScore: 0
+            totalScore: 0,
+            gameHistory: []
+        )
+        
+        initializeGame()
+    }
+
+    func loadLevel(_ level: GameLevel) {
+        gameState = GameState(
+            gridSize: level.gridSize,
+            colorCount: level.colorCount,
+            startPosition: level.startPosition,
+            grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
+            currentPlayerArea: [],
+            moveCount: 0,
+            isCompleted: false,
+            totalScore: 0,
+            gameHistory: []
         )
         
         initializeGame()
@@ -84,19 +106,30 @@ class GameViewModel: ObservableObject {
         gameState.moveCount += 1
         gameState.totalScore += pointsEarned
         
-        // Debug print
-        print("Cells gained: \(cellsGained), Points: \(pointsEarned)")
+        if cellsGained > 0 {
+            SoundManager.shared.playMoveSound()
+            
+            // Haptic feedback gebaseerd op grootte van de zet
+            if cellsGained >= 10 {
+                SoundManager.shared.heavyHaptic() // Grote zet
+            } else if cellsGained >= 5 {
+                SoundManager.shared.mediumHaptic() // Medium zet
+            } else {
+                SoundManager.shared.lightHaptic() // Kleine zet
+            }
+            
+            if pointsEarned > 100 {
+                SoundManager.shared.playScoreGainSound()
+            }
+        } else {
+            // Geen nieuwe cellen - warning haptic
+            SoundManager.shared.warningHaptic()
+        }
         
         // Trigger particle effect vanaf center van nieuwe cellen
         if cellsGained > 0, let callback = onCellsGained {
             let centerPosition = GridPositionHelper.shared.getCenterPosition(for: newCells)
-            print("Triggering particle at: \(centerPosition)")
             callback(pointsEarned, centerPosition)
-        }
-
-        if cellsGained > 0 {
-            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-            impactFeedback.impactOccurred()
         }
         
         // Check win condition
@@ -126,7 +159,10 @@ class GameViewModel: ObservableObject {
     }
 
     func undoLastMove() -> Bool {
-        guard !gameState.gameHistory.isEmpty else { return false }
+        guard !gameState.gameHistory.isEmpty else {
+            SoundManager.shared.errorHaptic()
+            return false
+        }
         
         let previousState = gameState.gameHistory.removeLast()
         
@@ -135,6 +171,9 @@ class GameViewModel: ObservableObject {
         gameState.moveCount = previousState.moveCount
         gameState.totalScore = previousState.totalScore
         gameState.isCompleted = false // Reset completion state
+
+        SoundManager.shared.playUndoSound()
+        SoundManager.shared.mediumHaptic()
         
         return true
     }
@@ -142,10 +181,52 @@ class GameViewModel: ObservableObject {
     var canUndo: Bool {
         return !gameState.gameHistory.isEmpty
     }
+
+    func goToNextLevel() -> Bool {
+        if let nextLevel = levelManager.nextLevel() {
+            levelManager.selectLevel(nextLevel)
+            loadLevel(nextLevel)
+            return true
+        }
+        return false
+    }
+
+    var hasNextLevel: Bool {
+        return levelManager.nextLevel() != nil
+    }
     
     private func checkWinCondition() {
         if gameState.currentPlayerArea.count == gameState.gridSize * gameState.gridSize {
             gameState.isCompleted = true
+            
+            // Bereken sterren gebaseerd op score
+            let stars = calculateStars()
+
+            // Play level complete sound
+            SoundManager.shared.playLevelCompleteSound()
+            SoundManager.shared.successHaptic()
+            
+            // Mark level as completed met score en sterren
+            levelManager.completeLevel(
+                levelManager.currentLevel.id,
+                withScore: gameState.totalScore,
+                stars: stars
+            )
+        }
+    }
+
+    private func calculateStars() -> Int {
+        let targetStars = levelManager.currentLevel.targetStars
+        let score = gameState.totalScore
+        
+        if score >= targetStars[2] {
+            return 3 // ⭐⭐⭐
+        } else if score >= targetStars[1] {
+            return 2 // ⭐⭐
+        } else if score >= targetStars[0] {
+            return 1 // ⭐
+        } else {
+            return 1 // Minimaal 1 ster voor completion
         }
     }
 }

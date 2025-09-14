@@ -13,6 +13,8 @@ struct WinOverlayView: View {
     let moveCount: Int
     let score: Int
     let onResetGame: (() -> Void)?
+    let onNextLevel: (() -> Void)?
+    let hasNextLevel: Bool
     
     var body: some View {
         ZStack {
@@ -113,28 +115,32 @@ struct WinOverlayView: View {
                 }
                 
                 VStack(spacing: 15) {
-                    // Next level button
-                    Button("🌟 NEXT LEVEL 🌟") {
-                        // TODO: Handle next level later
-                    }
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 15)
-                    .background(
-                        LinearGradient(
-                            colors: [.yellow, .orange],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                    if hasNextLevel {
+                        // Next level button
+                        Button("🌟 NEXT LEVEL 🌟") {
+                            SoundManager.shared.playButtonTapSound()
+                            onNextLevel?()
+                        }
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 30)
+                        .padding(.vertical, 15)
+                        .background(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .foregroundColor(.black)
-                    .cornerRadius(25)
-                    .shadow(color: .yellow, radius: 15)
-                    .scaleEffect(textScale)
+                        .foregroundColor(.black)
+                        .cornerRadius(25)
+                        .shadow(color: .yellow, radius: 15)
+                        .scaleEffect(textScale)
+                    }
                     
                     // Reset/Play Again button
                     Button("🔄 PLAY AGAIN") {
+                        SoundManager.shared.playButtonTapSound()
                         onResetGame?() // Callback naar GameView
                     }
                     .font(.title3)
@@ -152,6 +158,13 @@ struct WinOverlayView: View {
                     .cornerRadius(20)
                     .shadow(color: .blue, radius: 10)
                     .scaleEffect(textScale)
+                    
+                    // Back to levels button
+                    Button("📋 LEVEL SELECT") {
+                        // Deze kunnen we later toevoegen als je wilt
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 }
             }
             .scaleEffect(scale)

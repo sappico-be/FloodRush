@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct ColorPickerView: View {
     let availableColors: [Color]
@@ -10,6 +11,8 @@ struct ColorPickerView: View {
             ForEach(availableColors, id: \.self) { color in
                 Button(action: {
                     if !isDisabled {
+                        SoundManager.shared.playButtonTapSound()
+                        SoundManager.shared.selectionHaptic()
                         onColorSelected(color)
                     }
                 }) {

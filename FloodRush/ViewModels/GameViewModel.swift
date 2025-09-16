@@ -12,10 +12,10 @@ class GameViewModel: ObservableObject {
         
         self.gameState = GameState(
             gridSize: level.gridSize,
-            colorCount: level.colorCount,
+            fruitCount: level.fruitCount,
             startPosition: level.startPosition,
-            targetColor: level.targetColor,
-            grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
+            targetFruit: level.targetFruit,
+            grid: Array(repeating: Array(repeating: Fruit.nut, count: level.gridSize), count: level.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -29,10 +29,10 @@ class GameViewModel: ObservableObject {
     func loadLevel(_ level: GameLevel) {
         gameState = GameState(
             gridSize: level.gridSize,
-            colorCount: level.colorCount,
+            fruitCount: level.fruitCount,
             startPosition: level.startPosition,
-            targetColor: level.targetColor,
-            grid: Array(repeating: Array(repeating: Color.gray, count: level.gridSize), count: level.gridSize),
+            targetFruit: level.targetFruit,
+            grid: Array(repeating: Array(repeating: Fruit.nut, count: level.gridSize), count: level.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -52,8 +52,8 @@ class GameViewModel: ObservableObject {
         // Tijdelijke implementatie
         for row in 0..<gameState.gridSize {
             for col in 0..<gameState.gridSize {
-                let randomIndex = Int.random(in: 0..<min(gameState.colorCount, GameState.availableColors.count))
-                gameState.grid[row][col] = GameState.availableColors[randomIndex]
+                let randomIndex = Int.random(in: 0..<min(gameState.fruitCount, GameState.availableFruits.count))
+                gameState.grid[row][col] = GameState.availableFruits[randomIndex]
             }
         }
     }
@@ -61,10 +61,10 @@ class GameViewModel: ObservableObject {
     func resetGame() {
         gameState = GameState(
             gridSize: gameState.gridSize,
-            colorCount: gameState.colorCount,
+            fruitCount: gameState.fruitCount,
             startPosition: gameState.startPosition,
-            targetColor: gameState.targetColor,
-            grid: Array(repeating: Array(repeating: Color.gray, count: gameState.gridSize), count: gameState.gridSize),
+            targetFruit: gameState.targetFruit,
+            grid: Array(repeating: Array(repeating: Fruit.nut, count: gameState.gridSize), count: gameState.gridSize),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -80,7 +80,7 @@ class GameViewModel: ObservableObject {
         gameState.currentPlayerArea = [gameState.startPosition]
     }
 
-    func makeMove(color: Color, onCellsGained: ((Int, CGPoint) -> Void)? = nil) {
+    func makeMove(fruit: Fruit, onCellsGained: ((Int, CGPoint) -> Void)? = nil) {
         // Bewaar huidige state in history voordat we de move maken
         let historyEntry = GameHistoryEntry(
             grid: gameState.grid,
@@ -95,11 +95,11 @@ class GameViewModel: ObservableObject {
         
         // Update de kleur van alle huidige player area cellen
         for position in gameState.currentPlayerArea {
-            gameState.grid[position.row][position.col] = color
+            gameState.grid[position.row][position.col] = fruit
         }
         
         // Nu uitbreiden naar aangrenzende cellen van deze kleur
-        gameState.currentPlayerArea = getConnectedArea(from: gameState.startPosition, with: color)
+        gameState.currentPlayerArea = getConnectedArea(from: gameState.startPosition, with: fruit)
         
         // Bereken nieuwe cellen
         let newCells = gameState.currentPlayerArea.subtracting(oldPlayerArea)
@@ -139,7 +139,7 @@ class GameViewModel: ObservableObject {
         checkWinCondition()
     }
 
-    private func getConnectedArea(from position: GridPosition, with color: Color) -> Set<GridPosition> {
+    private func getConnectedArea(from position: GridPosition, with fruit: Fruit) -> Set<GridPosition> {
         var visited: Set<GridPosition> = []
         var toVisit: [GridPosition] = [position]
         
@@ -147,12 +147,12 @@ class GameViewModel: ObservableObject {
             let current = toVisit.removeFirst()
             
             if visited.contains(current) { continue }
-            if gameState.grid[current.row][current.col] != color { continue }
+            if gameState.grid[current.row][current.col] != fruit { continue }
             
             visited.insert(current)
             
             for adjacent in current.adjacentPositions(in: gameState.gridSize) {
-                if !visited.contains(adjacent) && gameState.grid[adjacent.row][adjacent.col] == color {
+                if !visited.contains(adjacent) && gameState.grid[adjacent.row][adjacent.col] == fruit {
                     toVisit.append(adjacent)
                 }
             }
@@ -201,10 +201,10 @@ class GameViewModel: ObservableObject {
     private func checkWinCondition() {
         if gameState.currentPlayerArea.count == gameState.gridSize * gameState.gridSize {
             // Check of target kleur wordt gehaald (als er een target is)
-            if let targetColor = gameState.targetColor {
-                let currentGridColor = gameState.grid[gameState.startPosition.row][gameState.startPosition.col]
+            if let targetFruit = gameState.targetFruit {
+                let currentGridFruit = gameState.grid[gameState.startPosition.row][gameState.startPosition.col]
                 
-                if currentGridColor == targetColor {
+                if currentGridFruit == targetFruit {
                     // Win: alle cellen + juiste kleur
                     gameState.isCompleted = true
                     let stars = calculateStars()
@@ -238,7 +238,7 @@ class GameViewModel: ObservableObject {
         SoundManager.shared.errorHaptic()
         
         // Reset game state maar behoud level
-        gameState.grid = Array(repeating: Array(repeating: Color.gray, count: gameState.gridSize), count: gameState.gridSize)
+        gameState.grid = Array(repeating: Array(repeating: Fruit.nut, count: gameState.gridSize), count: gameState.gridSize)
         gameState.currentPlayerArea = []
         gameState.moveCount = 0
         gameState.totalScore = 0

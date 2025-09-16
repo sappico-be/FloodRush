@@ -23,9 +23,9 @@ class LevelManager: ObservableObject {
                 packId: 1,
                 levelInPack: levelNum,
                 gridSize: 6,
-                colorCount: min(3 + (levelNum - 1) / 5, 4), // Start 3 kleuren, naar 4
+                fruitCount: min(3 + (levelNum - 1) / 5, 4), // Start 3 kleuren, naar 4
                 startPosition: GridPosition(row: 0, col: 0),
-                targetColor: Color.green,
+                targetFruit: nil,
                 targetStars: [100, 300, 500]
             )
         }
@@ -37,9 +37,9 @@ class LevelManager: ObservableObject {
                 packId: 2,
                 levelInPack: levelNum,
                 gridSize: 8,
-                colorCount: min(3 + (levelNum - 1) / 4, 5), // Start 3, naar 5
+                fruitCount: min(3 + (levelNum - 1) / 4, 5), // Start 3, naar 5
                 startPosition: GridPosition(row: 1, col: 1), // Andere start positie,
-                targetColor: nil,
+                targetFruit: nil,
                 targetStars: [200, 600, 1000]
             )
         }
@@ -51,17 +51,17 @@ class LevelManager: ObservableObject {
                 packId: 3,
                 levelInPack: levelNum,
                 gridSize: 10,
-                colorCount: min(4 + (levelNum - 1) / 3, 6), // Start 4, naar 6
+                fruitCount: min(4 + (levelNum - 1) / 3, 6), // Start 4, naar 6
                 startPosition: GridPosition(row: 2, col: 2),
-                targetColor: nil,
+                targetFruit: nil,
                 targetStars: [500, 1200, 2000]
             )
         }
 
         let availablePacks = [
-            LevelPack(id: 1, name: "Starter Pack", emoji: "🌱", baseGridSize: 6, baseColorCount: 3, levels: starterLevels, isUnlocked: true),
-            LevelPack(id: 2, name: "Explorer Pack", emoji: "🏕️", baseGridSize: 8, baseColorCount: 4, levels: explorerLevels, isUnlocked: false),
-            LevelPack(id: 3, name: "Master Pack", emoji: "⚡", baseGridSize: 10, baseColorCount: 5, levels: masterLevels, isUnlocked: false)
+            LevelPack(id: 1, name: "Starter Pack", emoji: "🌱", baseGridSize: 6, baseFruitCount: 3, levels: starterLevels, isUnlocked: true),
+            LevelPack(id: 2, name: "Explorer Pack", emoji: "🏕️", baseGridSize: 8, baseFruitCount: 4, levels: explorerLevels, isUnlocked: false),
+            LevelPack(id: 3, name: "Master Pack", emoji: "⚡", baseGridSize: 10, baseFruitCount: 5, levels: masterLevels, isUnlocked: false)
         ]
 
         self.availablePacks = availablePacks

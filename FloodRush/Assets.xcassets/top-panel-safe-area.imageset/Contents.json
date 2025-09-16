@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "top-panel-safe-area.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

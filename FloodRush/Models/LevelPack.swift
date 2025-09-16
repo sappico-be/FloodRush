@@ -5,7 +5,7 @@ struct LevelPack {
     let name: String
     let emoji: String
     let baseGridSize: Int
-    let baseColorCount: Int
+    let baseFruitCount: Int
     let levels: [GameLevel]
     let isUnlocked: Bool
     

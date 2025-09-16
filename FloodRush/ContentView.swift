@@ -8,6 +8,7 @@
 import SwiftUI
 
 enum GameScreen {
+    case loadingAnimation
     case home
     case levelSelection
     case game
@@ -16,11 +17,18 @@ enum GameScreen {
 
 struct ContentView: View {
     @StateObject private var levelManager = LevelManager()
-    @State private var currentScreen: GameScreen = .home
+    @State private var currentScreen: GameScreen = .loadingAnimation
     @State private var gameViewModel: GameViewModel?
     
     var body: some View {
         switch currentScreen {
+        case .loadingAnimation:
+            LoadingAnimationView {
+                // Callback wanneer animatie voltooid is
+                withAnimation {
+                    currentScreen = .home
+                }
+            }
         case .home:
             HomeScreenView(
                 levelManager: levelManager,

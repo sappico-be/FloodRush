@@ -17,7 +17,7 @@ struct GridView: View {
                     HStack(spacing: spacing) {
                         ForEach(0..<gameState.gridSize, id: \.self) { col in
                             CellView(
-                                color: gameState.grid[row][col],
+                                fruit: gameState.grid[row][col],
                                 isInPlayerArea: gameState.currentPlayerArea.contains(
                                     GridPosition(row: row, col: col)
                                 )

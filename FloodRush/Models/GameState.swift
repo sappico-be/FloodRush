@@ -2,10 +2,10 @@ import SwiftUI
 
 struct GameState {
     let gridSize: Int
-    let colorCount: Int
+    let fruitCount: Int
     let startPosition: GridPosition
-    let targetColor: Color?
-    var grid: [[Color]]
+    let targetFruit: Fruit?
+    var grid: [[Fruit]]
     var currentPlayerArea: Set<GridPosition>
     var moveCount: Int
     var isCompleted: Bool
@@ -13,7 +13,7 @@ struct GameState {
     var gameHistory: [GameHistoryEntry] = []
     
     // Available colors static property
-    static let availableColors: [Color] = [.red, .blue, .green, .yellow, .orange, .purple]
+    static let availableFruits: [Fruit] = [.nut, .cherry, .strawberry, .muchroom, .clover, .berry, .grapes]
 }
 
 struct GridPosition: Hashable, Equatable {

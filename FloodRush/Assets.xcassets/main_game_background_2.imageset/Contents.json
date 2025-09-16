@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "main_game_background_2.jpg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

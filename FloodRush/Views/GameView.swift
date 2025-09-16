@@ -7,89 +7,171 @@ struct GameView: View {
     let levelManager: LevelManager
     let onBackToLevelSelect: (() -> Void)?
     @State private var particles: [ParticleData] = []
-    @State private var scorePosition: CGPoint = CGPoint(x: 100, y: 120)
+    @State private var scorePosition: CGPoint = CGPoint(x: 250, y: 95)
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 20) {
-                headerView
-                    .padding(.horizontal)
-                
-                // Grid
-                GridView(
-                    gameState: viewModel.gameState,
-                    onCellsGained: { pointsEarned, centerPosition in
-                        addScoreParticle(points: pointsEarned, from: centerPosition)
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Image("game-background")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .clipped()
+
+                greenLeaf
+                topPanel(geometry: geometry)
+
+                // Particles overlay
+                ForEach(particles, id: \.id) { particle in
+                    ScoreParticle(
+                        points: particle.points,
+                        startPosition: particle.startPosition,
+                        endPosition: particle.endPosition
+                    ) {
+                        // Remove particle when animation completes
+                        particles.removeAll { $0.id == particle.id }
                     }
-                )
-                .padding(.horizontal, 30.0)
-                
-                // Color Picker
-                ColorPickerView(
-                    availableColors: Array(GameState.availableColors.prefix(viewModel.gameState.colorCount)),
-                    targetColor: viewModel.gameState.targetColor,
-                    isDisabled: viewModel.gameState.isCompleted,
-                    onColorSelected: { color in
-                        viewModel.makeMove(color: color) { pointsEarned, centerPosition in
-                            addScoreParticle(points: pointsEarned, from: centerPosition)
-                        }
-                    }
-                )
-                .padding(.top, 10.0)
-                
-                Spacer()
-            }
-            
-            // Particles overlay
-            ForEach(particles, id: \.id) { particle in
-                ScoreParticle(
-                    points: particle.points,
-                    startPosition: particle.startPosition,
-                    endPosition: particle.endPosition
-                ) {
-                    // Remove particle when animation completes
-                    particles.removeAll { $0.id == particle.id }
                 }
-            }
-            
-            // Win overlay
-            if viewModel.gameState.isCompleted {
-                if levelManager.hasLivesRemaining() {
-                    WinOverlayView(
-                        moveCount: viewModel.gameState.moveCount,
-                        score: viewModel.gameState.totalScore,
-                        onResetGame: {
-                            viewModel.resetGame()
-                        },
-                        onNextLevel: {
-                            let _ = viewModel.goToNextLevel()
-                        },
-                        hasNextLevel: viewModel.hasNextLevel
-                    )
-                } else {
-                    GameOverOverlayView(
-                        onRetry: {
-                            levelManager.resetLives()
-                            viewModel.resetGame()
-                        },
-                        onBackToHome: {
-                            levelManager.resetLives()
-                            onBackToLevelSelect?()
-                        }
-                    )
+
+                // Win overlay
+                if viewModel.gameState.isCompleted {
+                    if levelManager.hasLivesRemaining() {
+                        WinOverlayView(
+                            moveCount: viewModel.gameState.moveCount,
+                            score: viewModel.gameState.totalScore,
+                            onResetGame: {
+                                viewModel.resetGame()
+                            },
+                            onNextLevel: {
+                                let _ = viewModel.goToNextLevel()
+                            },
+                            hasNextLevel: viewModel.hasNextLevel
+                        )
+                    } else {
+                        GameOverOverlayView(
+                            onRetry: {
+                                levelManager.resetLives()
+                                viewModel.resetGame()
+                            },
+                            onBackToHome: {
+                                levelManager.resetLives()
+                                onBackToLevelSelect?()
+                            }
+                        )
+                    }
                 }
             }
         }
-        .background(
-            Image("ignite_grid_background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        )
+        .ignoresSafeArea()
     }
 
-    var headerView: some View {
-        Group {
+    private func topPanel(geometry: GeometryProxy) -> some View {
+        VStack{
+            HStack {
+                Spacer()
+                ZStack {
+                    Image("top-panel-safe-area")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(
+                            maxWidth: geometry.size.width - 25
+                        )
+                        .clipped()
+                    
+                    HStack {
+                        ZStack(alignment: .leading) {
+                            Image("lives-info")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 40.0)
+                                .clipped()
+                            Image("move-count")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 40.0)
+                                .clipped()
+                            Text("\(viewModel.gameState.moveCount)")
+                                .font(.custom("helsinki", size: 23.0))
+                                .foregroundStyle(.white)
+                                .padding(.trailing, 10.0)
+                                .padding(.leading, 40)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                                .frame(maxWidth: 100)
+                        }
+                        
+                        ZStack {
+                            Image("points-block")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 40.0)
+                                .clipped()
+                            AnimatedScoreView(targetScore: viewModel.gameState.totalScore)
+                                .frame(maxWidth: 100)
+                        }
+                        
+                        Button {
+                            
+                        } label: {
+                            EmptyView()
+                        }
+                        .buttonStyle(
+                            ImageButtonStyle(
+                                normalImage: "pause-button",
+                                pressedImage: "pause-button",
+                                height: 40.0
+                            )
+                        )
+
+                    }
+                    .padding(.top, 30.0)
+                    .padding(.trailing, 20.0)
+                }
+            }
+
+            if !viewModel.gameState.isCompleted {
+                playArea(geometry: geometry)
+                    .padding(.top, 20.0)
+                    .padding(.horizontal, 20.0)
+            }
+
+            
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func playArea(geometry: GeometryProxy) -> some View {
+        VStack {
+            ZStack(alignment: .top) {
+                Image("play-area")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        maxWidth: geometry.size.width
+                    )
+                    .clipped()
+                
+                playAreaContent(geometry: geometry)
+            }
+            
+            // Color Picker
+            ColorPickerView(
+                availableFruits: Array(GameState.availableFruits.prefix(viewModel.gameState.fruitCount)),
+                targetFruit: viewModel.gameState.targetFruit,
+                isDisabled: viewModel.gameState.isCompleted,
+                onFruitSelected: { fruit in
+                    viewModel.makeMove(fruit: fruit) { pointsEarned, centerPosition in
+                        addScoreParticle(points: pointsEarned, from: centerPosition)
+                    }
+                }
+            )
+            .frame(maxHeight: 70.0)
+            
+            Spacer()
+            
             HStack {
                 Button {
                     onBackToLevelSelect?()
@@ -98,75 +180,75 @@ struct GameView: View {
                 }
                 .buttonStyle(
                     ImageButtonStyle(
-                        normalImage: "close_button",
-                        pressedImage: "close_button",
-                        height: 30
+                        normalImage: "exit-button",
+                        pressedImage: "exit-button",
+                        height: 60.0
                     )
                 )
                 
                 Spacer()
-                
-                // Level info
-                let text = "Level \(levelManager.currentLevel.levelInPack)"
-                Text(text)
-                    .font(.custom("FredokaOne-Regular", size: 28))
-                    .foregroundStyle(.white)
-                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 0, y: -1)
-                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: -2, y: 0)
-                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 0, y: 2)
-                    .shadow(color: Color(red: 156/255.0, green: 56/255.0, blue: 14/255.0), radius: 0, x: 2, y: 0)
-                
-                
-                Spacer()
-                
-                // Placeholder voor symmetrie
-                Text("Levels")
-                    .opacity(0)
             }
-            
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Moves: \(viewModel.gameState.moveCount)")
-                    AnimatedScoreView(targetScore: viewModel.gameState.totalScore)
-                }
-                Spacer()
-                
-                VStack {
-                    if let targetColor = viewModel.gameState.targetColor {
-                        VStack(spacing: 4) {
-                            Text("Target:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            
-                            Circle()
-                                .fill(targetColor)
-                                .frame(width: 25, height: 25)
-                                .overlay(
-                                    Circle()
-                                        .stroke(.black, lineWidth: 1)
-                                )
-                        }
-                    }
-                    
-                    // Undo button
-                    Button(action: {
-                        let _ = viewModel.undoLastMove()
-                    }) {
-                        Image(systemName: "arrow.uturn.backward")
-                            .font(.title2)
-                            .foregroundColor(viewModel.canUndo ? .blue : .gray)
-                    }
-                    .disabled(!viewModel.canUndo)
-                    
-                    Text("Progress: \(viewModel.gameState.currentPlayerArea.count)/\(viewModel.gameState.gridSize * viewModel.gameState.gridSize)")
-                        .font(.caption)
-                }
-            }
+            .padding(.bottom, 20.0)
         }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func playAreaContent(geometry: GeometryProxy) -> some View {
+        VStack(spacing: 10.0) {
+            HStack {
+                Color.clear
+                    .frame(width: 40.0, height: 40.0)
+                Spacer()
+                Text("Level \(levelManager.currentLevel.levelInPack)")
+                    .font(.custom("helsinki", size: 30.0))
+                    .foregroundStyle(.white)
+                Spacer()
+
+                Button {
+                    if viewModel.canUndo {
+                        let _ = viewModel.undoLastMove()
+                    }
+                } label: {
+                    EmptyView()
+                }
+                .buttonStyle(
+                    ImageButtonStyle(
+                        normalImage: "rerty-button",
+                        pressedImage: "rerty-button",
+                        height: 40.0
+                    )
+                )
+                .disabled(!viewModel.canUndo)
+            }
+            GridView(
+                gameState: viewModel.gameState,
+                onCellsGained: { pointsEarned, centerPosition in
+                    addScoreParticle(points: pointsEarned, from: centerPosition)
+                }
+            )
+            .padding(.bottom, 20.0)
+            .padding(.top, 15.0)
+        }
+        .padding(.top, 25.0)
+        .padding(.horizontal, 15.0)
+    }
+
+    private var greenLeaf: some View {
+        VStack {
+            Spacer()
+            Image("green-leaf")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(
+                    maxHeight: 250
+                )
+                .clipped()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func addScoreParticle(points: Int, from startPosition: CGPoint) {
-        let scorePosition = CGPoint(x: 80, y: 30)
+//        let scorePosition = CGPoint(x: 80, y: 30)
         
         // Voor grote scores, maak meerdere particles
         let particleCount = min(3, max(1, points / 100)) // 1-3 particles afhankelijk van punten
@@ -234,4 +316,12 @@ struct StrokeModifier: ViewModifier {
                 .blur(radius: strokeSize)
         }
     }
+}
+
+#Preview {
+    GameView(
+        viewModel: GameViewModel(levelManager: LevelManager()),
+        levelManager: LevelManager()) {
+            
+        }
 }

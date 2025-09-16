@@ -5,9 +5,9 @@ struct GameLevel {
     let packId: Int
     let levelInPack: Int // 1-20 bijvoorbeeld
     let gridSize: Int
-    let colorCount: Int
+    let fruitCount: Int
     let startPosition: GridPosition
-    let targetColor: Color?
+    let targetFruit: Fruit?
     let targetStars: [Int] // Punten nodig voor 1, 2, 3 sterren
     
     var displayName: String {

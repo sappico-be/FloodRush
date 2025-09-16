@@ -5,7 +5,13 @@ struct AnimatedScoreView: View {
     @State private var displayScore: Int = 0
     
     var body: some View {
-        Text("Score: \(displayScore)")
+        Text("\(displayScore)")
+            .font(.custom("helsinki", size: 23.0))
+            .foregroundStyle(.white)
+            .padding(.trailing, 10.0)
+            .padding(.leading, 40)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
             .onChange(of: targetScore) { _, newScore in
                 animateScore(to: newScore)
             }

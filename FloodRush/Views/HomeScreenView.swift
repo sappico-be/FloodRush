@@ -8,45 +8,66 @@ struct HomeScreenView: View {
     let onSettingsTapped: (() -> Void)?
     
     var body: some View {
-        ZStack(alignment: .top) {
-            HStack {
-                livesButton
-                Spacer()
-                pointsView
-            }
-            .padding(.top, 0)
-
-            VStack(spacing: 40) {
-                // Game title
-                Image("ignite_grid_logo")
+        GeometryReader { geometry in
+            ZStack {
+                Image("main_game_background_2")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 175)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .scaleEffect(1.1)
                     .clipped()
-                    .padding(.top, 65.0)
-                
-                // Main buttons
-                VStack(alignment: .center, spacing: 40.0) {
-                    // Big Play button
-                    startButton
-                    levelsButton
-                }
-                
-                Spacer()
+    //            HStack {
+    //                livesButton
+    //                Spacer()
+    //                pointsView
+    //            }
+    //            .padding(.top, 0)
 
-                HStack {
+                VStack(spacing: 0) {
+                    // Game title
+                    logoView(geometry: geometry)
+                    
                     Spacer()
-                    settingsButton
+                    
+                    // Main buttons
+                    VStack(alignment: .center, spacing: 40.0) {
+                        startButton
+//                        levelsButton
+                    }
+                    .padding(.bottom, 30.0)
                 }
+
+                Image("green_background_overlay")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .clipped()
+                    .allowsHitTesting(false)
             }
         }
-        .padding(.horizontal)
-        .background(
-            Image("ignite_grid_background")
+        .ignoresSafeArea()
+    }
+
+    private func logoView(geometry: GeometryProxy) -> some View {
+        ZStack {
+            let position = CGPoint(
+                x: geometry.size.width / 2,
+                y: geometry.size.height * 0.25 // 25% from top (header position)
+            )
+
+            Image("logo_forest_run")
                 .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        )
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 240, height: 128)
+                .scaleEffect(1.4)
+                .position(position)
+        }
     }
 
     private var livesButton: some View {
@@ -120,9 +141,9 @@ struct HomeScreenView: View {
         }
         .buttonStyle(
             ImageButtonStyle(
-                normalImage: "start_button",
-                pressedImage: "start_button",
-                height: 80.0
+                normalImage: "start-button",
+                pressedImage: "start-button",
+                height: 90.0
             )
         )
     }
@@ -139,7 +160,7 @@ struct HomeScreenView: View {
             ImageButtonStyle(
                 normalImage: "levels_button",
                 pressedImage: "levels_button",
-                height: 60.0
+                height: 80.0
             )
         )
     }
@@ -155,7 +176,7 @@ struct HomeScreenView: View {
             ImageButtonStyle(
                 normalImage: "settings_button",
                 pressedImage: "settings_button",
-                height: 40.0
+                height: 80.0
             )
         )
     }

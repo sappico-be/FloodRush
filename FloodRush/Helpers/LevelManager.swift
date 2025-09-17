@@ -2,9 +2,8 @@ import SwiftUI
 import Combine
 
 class LevelManager: ObservableObject {
-    @Published var currentPack: LevelPack
     @Published var currentLevel: GameLevel
-    @Published var availablePacks: [LevelPack]
+    @Published var allLevels: [GameLevel] // Vervang availablePacks
     @Published var completedLevels: Set<Int> = [] // IDs van voltooide levels
     @Published var unlockedLevels: Set<Int> = [] // IDs van ontgrendelde levels
     @Published var totalScore: Int = 0
@@ -16,87 +15,75 @@ class LevelManager: ObservableObject {
     @Published var maxLives: Int = 3
     
     init() {
-        // Pack 1: Starter Pack (6x6 grids)
-        let starterLevels = (1...20).map { levelNum in
-            GameLevel(
+        // Create all levels in sequence (60 levels total)
+        var levels: [GameLevel] = []
+        
+        // Levels 1-20: 6x6 grids (starter difficulty)
+        for levelNum in 1...20 {
+            levels.append(GameLevel(
                 id: levelNum,
-                packId: 1,
+                packId: 1, // Keep for compatibility but not used
                 levelInPack: levelNum,
                 gridSize: 6,
-                fruitCount: min(3 + (levelNum - 1) / 5, 4), // Start 3 kleuren, naar 4
+                fruitCount: min(3 + (levelNum - 1) / 5, 4),
                 startPosition: GridPosition(row: 0, col: 0),
                 targetFruit: nil,
-                targetStars: [100, 300, 500]
-            )
+                targetMoves: 8 + (levelNum - 1) / 3, // 8-14 moves
+                baseScore: 8000
+            ))
         }
         
-        // Pack 2: Explorer Pack (8x8 grids)
-        let explorerLevels = (1...20).map { levelNum in
-            GameLevel(
-                id: 20 + levelNum,
-                packId: 2,
-                levelInPack: levelNum,
+        // Levels 21-40: 8x8 grids (medium difficulty)
+        for levelNum in 21...40 {
+            levels.append(GameLevel(
+                id: levelNum,
+                packId: 2, // Keep for compatibility but not used
+                levelInPack: levelNum - 20,
                 gridSize: 8,
-                fruitCount: min(3 + (levelNum - 1) / 4, 5), // Start 3, naar 5
-                startPosition: GridPosition(row: 1, col: 1), // Andere start positie,
+                fruitCount: min(3 + (levelNum - 21) / 4, 5),
+                startPosition: GridPosition(row: 1, col: 1),
                 targetFruit: nil,
-                targetStars: [200, 600, 1000]
-            )
+                targetMoves: 12 + (levelNum - 21) / 2, // 12-22 moves
+                baseScore: 12000
+            ))
         }
         
-        // Pack 3: Master Pack (10x10 grids)
-        let masterLevels = (1...20).map { levelNum in
-            GameLevel(
-                id: 40 + levelNum,
-                packId: 3,
-                levelInPack: levelNum,
+        // Levels 41-60: 10x10 grids (hard difficulty)
+        for levelNum in 41...60 {
+            levels.append(GameLevel(
+                id: levelNum,
+                packId: 3, // Keep for compatibility but not used
+                levelInPack: levelNum - 40,
                 gridSize: 10,
-                fruitCount: min(4 + (levelNum - 1) / 3, 6), // Start 4, naar 6
+                fruitCount: min(4 + (levelNum - 41) / 3, 6),
                 startPosition: GridPosition(row: 2, col: 2),
                 targetFruit: nil,
-                targetStars: [500, 1200, 2000]
-            )
+                targetMoves: 18 + (levelNum - 41), // 18-38 moves
+                baseScore: 20000
+            ))
         }
 
-        let availablePacks = [
-            LevelPack(id: 1, name: "Starter Pack", emoji: "🌱", baseGridSize: 6, baseFruitCount: 3, levels: starterLevels, isUnlocked: true),
-            LevelPack(id: 2, name: "Explorer Pack", emoji: "🏕️", baseGridSize: 8, baseFruitCount: 4, levels: explorerLevels, isUnlocked: false),
-            LevelPack(id: 3, name: "Master Pack", emoji: "⚡", baseGridSize: 10, baseFruitCount: 5, levels: masterLevels, isUnlocked: false)
-        ]
+        self.allLevels = levels
+        self.currentLevel = levels[0]
 
-        self.availablePacks = availablePacks
-        self.currentPack = availablePacks[0]
-        self.currentLevel = availablePacks[0].levels[0]
-
-        // Unlock eerste level van elke pack
-        unlockedLevels.insert(1) // Starter pack level 1
-        unlockedLevels.insert(21) // Explorer pack level 1 (als pack unlocked is)
-        unlockedLevels.insert(41) // Master pack level 1 (als pack unlocked is)
-        
-        // Voor nu: unlock alleen eerste level van eerste pack
+        // Unlock alleen het eerste level
         unlockedLevels = [1]
     }
     
     func selectLevel(_ level: GameLevel) {
         currentLevel = level
-        currentPack = availablePacks.first { $0.id == level.packId } ?? currentPack
     }
     
     func nextLevel() -> GameLevel? {
-        let currentIndex = currentPack.levels.firstIndex { $0.id == currentLevel.id } ?? 0
-        
-        if currentIndex + 1 < currentPack.levels.count {
-            // Volgende level in huidige pack
-            return currentPack.levels[currentIndex + 1]
-        } else {
-            // Volgende pack
-            let nextPackIndex = availablePacks.firstIndex { $0.id == currentPack.id } ?? 0
-            if nextPackIndex + 1 < availablePacks.count {
-                return availablePacks[nextPackIndex + 1].levels.first
-            }
+        guard let currentIndex = allLevels.firstIndex(where: { $0.id == currentLevel.id }) else {
+            return nil
         }
         
-        return nil
+        if currentIndex + 1 < allLevels.count {
+            return allLevels[currentIndex + 1]
+        }
+        
+        return nil // No more levels
     }
 
     func completeLevel(_ levelId: Int, withScore score: Int, stars: Int) {
@@ -128,48 +115,21 @@ class LevelManager: ObservableObject {
         
         // Unlock next level logic
         if !wasAlreadyCompleted {
-            if let currentLevelIndex = availablePacks.flatMap({ $0.levels }).firstIndex(where: { $0.id == levelId }) {
-                let allLevels = availablePacks.flatMap({ $0.levels })
+            if let currentLevelIndex = allLevels.firstIndex(where: { $0.id == levelId }) {
                 if currentLevelIndex + 1 < allLevels.count {
                     let nextLevel = allLevels[currentLevelIndex + 1]
                     unlockedLevels.insert(nextLevel.id)
-                }
-            }
-            
-            updatePackUnlockStatus()
-        }
-    }
-
-    private func updatePackUnlockStatus() {
-        // Update pack unlock status gebaseerd op voltooide levels
-        for pack in availablePacks {
-            let packLevels = Set(pack.levels.map { $0.id })
-            let completedInPack = completedLevels.intersection(packLevels)
-            
-            // Als alle levels in een pack voltooid zijn, unlock volgende pack
-            if completedInPack.count == pack.levels.count {
-                if let nextPackIndex = availablePacks.firstIndex(where: { $0.id == pack.id + 1 }) {
-                    let nextPack = availablePacks[nextPackIndex]
-                    unlockedLevels.insert(nextPack.levels[0].id)
                 }
             }
         }
     }
 
     func getNextUnlockedLevel() -> GameLevel? {
-        let allLevels = availablePacks.flatMap({ $0.levels })
         return allLevels.first { level in
             unlockedLevels.contains(level.id) && !completedLevels.contains(level.id)
         } ?? allLevels.first { level in
             unlockedLevels.contains(level.id)
         }
-    }
-
-    func getCurrentProgressPack() -> LevelPack? {
-        if let nextLevel = getNextUnlockedLevel() {
-            return availablePacks.first { $0.id == nextLevel.packId }
-        }
-        return availablePacks.first
     }
 
     func isLevelUnlocked(_ levelId: Int) -> Bool {
@@ -186,7 +146,7 @@ class LevelManager: ObservableObject {
 
     func loseLife() -> Bool {
         currentLives = max(0, currentLives - 1)
-        return currentLives > 0 // Return true als je nog levens hebt
+        return currentLives > 0
     }
     
     func resetLives() {
@@ -195,5 +155,11 @@ class LevelManager: ObservableObject {
     
     func hasLivesRemaining() -> Bool {
         return currentLives > 0
+    }
+    
+    // Helper function to get levels for map view (chunks of 20)
+    func getLevelsForMap(startIndex: Int = 0, count: Int = 20) -> [GameLevel] {
+        let endIndex = min(startIndex + count, allLevels.count)
+        return Array(allLevels[startIndex..<endIndex])
     }
 }

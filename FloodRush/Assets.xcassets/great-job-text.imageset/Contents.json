@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "great-job-text.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

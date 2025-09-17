@@ -5,7 +5,8 @@ struct HomeScreenView: View {
     @ObservedObject var levelManager: LevelManager
     let onPlayTapped: () -> Void
     let onLevelPacksTapped: () -> Void
-    let onSettingsTapped: (() -> Void)?
+    let onLeaderboardTapped: () -> Void
+    let onSettingsTapped: () -> Void
     
     var body: some View {
         GeometryReader { geometry in
@@ -26,19 +27,18 @@ struct HomeScreenView: View {
     //            }
     //            .padding(.top, 0)
 
-                VStack(spacing: 0) {
-                    // Game title
-                    logoView(geometry: geometry)
-                    
-                    Spacer()
-                    
-                    // Main buttons
-                    VStack(alignment: .center, spacing: 40.0) {
-                        startButton
-//                        levelsButton
+                logoView(geometry: geometry)
+                
+                // Main buttons
+                VStack(spacing: 30.0) {
+                    startButton
+                    HStack(spacing: 30) {
+                        levelsButton
+                        leaderboardButton
+                        settingsButton
                     }
-                    .padding(.bottom, 30.0)
                 }
+                .padding(.top, 70.0)
 
                 Image("green_background_overlay")
                     .resizable()
@@ -141,9 +141,9 @@ struct HomeScreenView: View {
         }
         .buttonStyle(
             ImageButtonStyle(
-                normalImage: "start-button",
-                pressedImage: "start-button",
-                height: 90.0
+                normalImage: "play_button",
+                pressedImage: "play_button",
+                height: 110.0
             )
         )
     }
@@ -158,9 +158,26 @@ struct HomeScreenView: View {
         }
         .buttonStyle(
             ImageButtonStyle(
-                normalImage: "levels_button",
-                pressedImage: "levels_button",
-                height: 80.0
+                normalImage: "levels-button-3",
+                pressedImage: "levels-button-3",
+                height: 70.0
+            )
+        )
+    }
+    
+    private var leaderboardButton: some View {
+        Button(action: {
+            SoundManager.shared.playButtonTapSound()
+            SoundManager.shared.lightHaptic()
+            onLeaderboardTapped()
+        }) {
+            EmptyView()
+        }
+        .buttonStyle(
+            ImageButtonStyle(
+                normalImage: "leaderboard-button",
+                pressedImage: "leaderboard-button",
+                height: 70.0
             )
         )
     }
@@ -168,18 +185,32 @@ struct HomeScreenView: View {
     private var settingsButton: some View {
         Button(action: {
             SoundManager.shared.playButtonTapSound()
-            onSettingsTapped?() // Nieuwe callback
+            onSettingsTapped() // Nieuwe callback
         }) {
             EmptyView()
         }
         .buttonStyle(
             ImageButtonStyle(
-                normalImage: "settings_button",
-                pressedImage: "settings_button",
-                height: 80.0
+                normalImage: "settings-button-2",
+                pressedImage: "settings-button-2",
+                height: 70.0
             )
         )
     }
+}
+
+#Preview {
+    HomeScreenView(
+        levelManager: LevelManager()) {
+            
+        } onLevelPacksTapped: {
+            
+        } onLeaderboardTapped: {
+            
+        } onSettingsTapped: {
+            
+        }
+
 }
 
 struct ImageButtonStyle: ButtonStyle {

@@ -11,8 +11,8 @@ struct GameState {
     var isCompleted: Bool
     var totalScore: Int
     var gameHistory: [GameHistoryEntry] = []
+    var cellsGainedPerMove: [Int]? = [] // NIEUW: Track cells per move
     
-    // Available colors static property
     static let availableFruits: [Fruit] = [.nut, .cherry, .strawberry, .muchroom, .clover, .berry, .grapes]
 }
 

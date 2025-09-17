@@ -81,7 +81,7 @@ class GameViewModel: ObservableObject {
     }
 
     func makeMove(fruit: Fruit, onCellsGained: ((Int, CGPoint) -> Void)? = nil) {
-        // Bewaar huidige state in history voordat we de move maken
+        // Bewaar huidige state in history
         let historyEntry = GameHistoryEntry(
             grid: gameState.grid,
             currentPlayerArea: gameState.currentPlayerArea,
@@ -98,44 +98,53 @@ class GameViewModel: ObservableObject {
             gameState.grid[position.row][position.col] = fruit
         }
         
-        // Nu uitbreiden naar aangrenzende cellen van deze kleur
+        // Uitbreiden naar aangrenzende cellen
         gameState.currentPlayerArea = getConnectedArea(from: gameState.startPosition, with: fruit)
         
-        // Bereken nieuwe cellen
+        // Bereken nieuwe cellen en punten
         let newCells = gameState.currentPlayerArea.subtracting(oldPlayerArea)
         let cellsGained = newCells.count
-        let pointsEarned = cellsGained * cellsGained * 10
+        
+        // NIEUWE SCORE BEREKENING
+        let movePoints = ScoreCalculator.calculateMoveScore(
+            cellsGained: cellsGained,
+            gridSize: gameState.gridSize
+        )
         
         gameState.moveCount += 1
-        gameState.totalScore += pointsEarned
+        gameState.totalScore += movePoints
         
+        // Bewaar cells gained voor final score berekening
+        if gameState.cellsGainedPerMove == nil {
+            gameState.cellsGainedPerMove = []
+        }
+        gameState.cellsGainedPerMove?.append(cellsGained)
+        
+        // Sound en haptic feedback
         if cellsGained > 0 {
             SoundManager.shared.playMoveSound()
             
-            // Haptic feedback gebaseerd op grootte van de zet
-            if cellsGained >= 10 {
-                SoundManager.shared.heavyHaptic() // Grote zet
-            } else if cellsGained >= 5 {
-                SoundManager.shared.mediumHaptic() // Medium zet
+            if cellsGained >= gameState.gridSize * 2 {
+                SoundManager.shared.heavyHaptic()
+            } else if cellsGained >= gameState.gridSize {
+                SoundManager.shared.mediumHaptic()
             } else {
-                SoundManager.shared.lightHaptic() // Kleine zet
+                SoundManager.shared.lightHaptic()
             }
             
-            if pointsEarned > 100 {
+            if movePoints > 200 {
                 SoundManager.shared.playScoreGainSound()
             }
         } else {
-            // Geen nieuwe cellen - warning haptic
             SoundManager.shared.warningHaptic()
         }
         
-        // Trigger particle effect vanaf center van nieuwe cellen
+        // Particle effect
         if cellsGained > 0, let callback = onCellsGained {
             let centerPosition = GridPositionHelper.shared.getCenterPosition(for: newCells)
-            callback(pointsEarned, centerPosition)
+            callback(movePoints, centerPosition)
         }
         
-        // Check win condition
         checkWinCondition()
     }
 
@@ -200,37 +209,27 @@ class GameViewModel: ObservableObject {
     
     private func checkWinCondition() {
         if gameState.currentPlayerArea.count == gameState.gridSize * gameState.gridSize {
-            // Check of target kleur wordt gehaald (als er een target is)
-            if let targetFruit = gameState.targetFruit {
-                let currentGridFruit = gameState.grid[gameState.startPosition.row][gameState.startPosition.col]
-                
-                if currentGridFruit == targetFruit {
-                    // Win: alle cellen + juiste kleur
-                    gameState.isCompleted = true
-                    let stars = calculateStars()
-                    SoundManager.shared.playLevelCompleteSound()
-                    SoundManager.shared.successHaptic()
-                    levelManager.completeLevel(levelManager.currentLevel.id, withScore: gameState.totalScore, stars: stars)
-                } else {
-                    // Wrong color - lose a life
-                    let hasLivesLeft = levelManager.loseLife()
-                    
-                    if hasLivesLeft {
-                        // Reset level met feedback
-                        resetLevelWithLifeLoss()
-                    } else {
-                        // Game over
-                        triggerGameOver()
-                    }
-                }
-            } else {
-                // Geen target kleur constraint - gewoon alle cellen is genoeg
-                gameState.isCompleted = true
-                let stars = calculateStars()
-                SoundManager.shared.playLevelCompleteSound()
-                SoundManager.shared.successHaptic()
-                levelManager.completeLevel(levelManager.currentLevel.id, withScore: gameState.totalScore, stars: stars)
-            }
+            gameState.isCompleted = true
+            
+            // NIEUWE FINAL SCORE BEREKENING
+            let result = ScoreCalculator.calculateFinalScore(
+                level: levelManager.currentLevel,
+                actualMoves: gameState.moveCount,
+                cellsGainedPerMove: gameState.cellsGainedPerMove ?? []
+            )
+            
+            // Update final score
+            gameState.totalScore = result.score
+            
+            SoundManager.shared.playLevelCompleteSound()
+            SoundManager.shared.successHaptic()
+            
+            // Complete level met nieuwe score en stars
+            levelManager.completeLevel(
+                levelManager.currentLevel.id,
+                withScore: result.score,
+                stars: result.stars
+            )
         }
     }
 
@@ -252,20 +251,5 @@ class GameViewModel: ObservableObject {
     private func triggerGameOver() {
         SoundManager.shared.errorHaptic()
         gameState.isCompleted = true // Dit triggert de overlay, maar dan voor game over
-    }
-
-    private func calculateStars() -> Int {
-        let targetStars = levelManager.currentLevel.targetStars
-        let score = gameState.totalScore
-        
-        if score >= targetStars[2] {
-            return 3 // ⭐⭐⭐
-        } else if score >= targetStars[1] {
-            return 2 // ⭐⭐
-        } else if score >= targetStars[0] {
-            return 1 // ⭐
-        } else {
-            return 1 // Minimaal 1 ster voor completion
-        }
     }
 }

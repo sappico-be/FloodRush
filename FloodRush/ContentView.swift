@@ -10,8 +10,8 @@ import SwiftUI
 enum GameScreen {
     case loadingAnimation
     case home
-    case levelSelection
     case game
+    case map
     case settings
 }
 
@@ -34,31 +34,32 @@ struct ContentView: View {
                 levelManager: levelManager,
                 onPlayTapped: {
                     if let nextLevel = levelManager.getNextUnlockedLevel() {
-                        levelManager.selectLevel(nextLevel)
-                        gameViewModel = GameViewModel(levelManager: levelManager)
-                        gameViewModel?.loadLevel(nextLevel)
-                        currentScreen = .game
+                        startGame(with: nextLevel)
                     }
                 },
                 onLevelPacksTapped: {
-                    currentScreen = .levelSelection
+                    currentScreen = .map
+                },
+                onLeaderboardTapped: {
+                    
                 },
                 onSettingsTapped: {
                     currentScreen = .settings
                 }
             )
-            
-        case .levelSelection:
-            LevelSelectionView(
-                levelManager: levelManager,
-                onLevelSelected: { level in
-                    gameViewModel = GameViewModel(levelManager: levelManager)
-                    gameViewModel?.loadLevel(level)
-                    currentScreen = .game
-                },
-                onBack: {
+        case .map:
+            MapLevelsView(
+                onBackTapped: {
                     currentScreen = .home
-                }
+                },
+                onLevelSelected: { level in
+                    if levelManager.isLevelUnlocked(level.id) {
+                        startGame(with: level)
+                    }
+                },
+                levelManager: levelManager,
+                startIndex: 0,
+                levelCount: 20
             )
             
         case .game:
@@ -67,6 +68,9 @@ struct ContentView: View {
                     viewModel: viewModel,
                     levelManager: levelManager,
                     onBackToLevelSelect: {
+                        currentScreen = .map
+                    },
+                    onBackToHomeTapped: {
                         currentScreen = .home
                     }
                 )
@@ -76,6 +80,14 @@ struct ContentView: View {
                 currentScreen = .home
             })
         }
+    }
+    
+    // Helper function om game te starten met specifiek level
+    private func startGame(with level: GameLevel) {
+        levelManager.selectLevel(level)
+        gameViewModel = GameViewModel(levelManager: levelManager)
+        gameViewModel?.loadLevel(level)
+        currentScreen = .game
     }
 }
 

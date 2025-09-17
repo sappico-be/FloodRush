@@ -6,6 +6,7 @@ struct GameView: View {
     @ObservedObject var viewModel: GameViewModel
     let levelManager: LevelManager
     let onBackToLevelSelect: (() -> Void)?
+    let onBackToHomeTapped: (() -> Void)?
     @State private var particles: [ParticleData] = []
     @State private var scorePosition: CGPoint = CGPoint(x: 250, y: 95)
 
@@ -48,7 +49,15 @@ struct GameView: View {
                             onNextLevel: {
                                 let _ = viewModel.goToNextLevel()
                             },
-                            hasNextLevel: viewModel.hasNextLevel
+                            onBackToHomeTapped: {
+                                onBackToHomeTapped?()
+                            },
+                            onBackToLevelsTapped: {
+                                onBackToLevelSelect?()
+                            },
+                            hasNextLevel: viewModel.hasNextLevel,
+                            targetMoves: levelManager.currentLevel.targetMoves,
+                            starsEarned: calculateCurrentStars()
                         )
                     } else {
                         GameOverOverlayView(
@@ -66,6 +75,16 @@ struct GameView: View {
             }
         }
         .ignoresSafeArea()
+    }
+
+    // VOEG DEZE HELPER FUNCTIE TOE aan je GameView struct:
+    private func calculateCurrentStars() -> Int {
+        let result = ScoreCalculator.calculateFinalScore(
+            level: levelManager.currentLevel,
+            actualMoves: viewModel.gameState.moveCount,
+            cellsGainedPerMove: viewModel.gameState.cellsGainedPerMove ?? []
+        )
+        return result.stars
     }
 
     private func topPanel(geometry: GeometryProxy) -> some View {
@@ -174,7 +193,7 @@ struct GameView: View {
             
             HStack {
                 Button {
-                    onBackToLevelSelect?()
+                    onBackToHomeTapped?()
                 } label: {
                     EmptyView()
                 }
@@ -221,10 +240,7 @@ struct GameView: View {
                 .disabled(!viewModel.canUndo)
             }
             GridView(
-                gameState: viewModel.gameState,
-                onCellsGained: { pointsEarned, centerPosition in
-                    addScoreParticle(points: pointsEarned, from: centerPosition)
-                }
+                gameState: viewModel.gameState
             )
             .padding(.bottom, 20.0)
             .padding(.top, 15.0)
@@ -321,7 +337,12 @@ struct StrokeModifier: ViewModifier {
 #Preview {
     GameView(
         viewModel: GameViewModel(levelManager: LevelManager()),
-        levelManager: LevelManager()) {
+        levelManager: LevelManager(),
+        onBackToLevelSelect: {
+            
+        },
+        onBackToHomeTapped: {
             
         }
+    )
 }

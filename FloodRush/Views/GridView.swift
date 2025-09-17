@@ -2,7 +2,6 @@ import SwiftUI
 
 struct GridView: View {
     let gameState: GameState
-    let onCellsGained: ((Int, CGPoint) -> Void)?
     let screenPadding: CGFloat = 30
     let spacing: CGFloat = 2
 

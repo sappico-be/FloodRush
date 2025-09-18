@@ -26,7 +26,7 @@ struct LevelButtonView: View {
             VStack(spacing: 4) {
                 // Level nummer of lock icon
                 if isUnlocked {
-                    Text("\(level.levelInPack)")
+                    Text("\(level.id)")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.white)

@@ -218,7 +218,7 @@ struct GameView: View {
                 Color.clear
                     .frame(width: 40.0, height: 40.0)
                 Spacer()
-                Text("Level \(levelManager.currentLevel.levelInPack)")
+                Text("Level \(levelManager.currentLevel.id)")
                     .font(.custom("helsinki", size: 30.0))
                     .foregroundStyle(.white)
                 Spacer()

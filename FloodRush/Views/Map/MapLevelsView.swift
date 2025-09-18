@@ -4,39 +4,27 @@ struct MapLevelsView: View {
     let onBackTapped: () -> Void
     let onLevelSelected: (GameLevel) -> Void
     @ObservedObject var levelManager: LevelManager // Voor toegang tot save data
-    let startIndex: Int // Welke levels te tonen (0, 20, 40, etc.)
-    let levelCount: Int // Hoeveel levels te tonen (default 20)
+    let startIndex: Int = 0 // Welke levels te tonen (0, 20, 40, etc.)
+    let levelCount: Int = 20 // Hoeveel levels te tonen (default 20)
     
     @State private var scrollPosition = ScrollPosition(edge: .bottom)
+    @State private var currentPage: Int = 0
     
     // Level posities als percentage van de kaart (x: 0-1, y: 0-1)
-    // Voor 20 levels per map
     private let levelPositions: [(x: Double, y: Double)] = [
-        (0.15, 1.24),   // Level 1 - onderaan midden
-        (0.34, 1.17),   // Level 2 - links omhoog
-        (0.7, 0.82),   // Level 3 - rechts omhoog
-        (0.2, 0.75),   // Level 4 - ver links
-        (0.8, 0.68),   // Level 5 - ver rechts
-        (0.4, 0.62),   // Level 6 - links van midden
-        (0.6, 0.55),   // Level 7 - rechts van midden
-        (0.25, 0.48),  // Level 8 - links
-        (0.75, 0.42),  // Level 9 - rechts
-        (0.5, 0.35),   // Level 10 - midden
-        (0.35, 0.28),  // Level 11 - links
-        (0.65, 0.22),  // Level 12 - rechts
-        (0.2, 0.18),   // Level 13 - ver links
-        (0.8, 0.15),   // Level 14 - ver rechts
-        (0.45, 0.12),  // Level 15 - links van midden boven
-        (0.55, 0.09),  // Level 16 - rechts van midden boven
-        (0.3, 0.06),   // Level 17 - links boven
-        (0.7, 0.04),   // Level 18 - rechts boven
-        (0.4, 0.02),   // Level 19 - links bovenaan
-        (0.6, 0.01),   // Level 20 - rechts bovenaan
+        (0.15, 1.24), (0.34, 1.17), (0.7, 0.82), (0.2, 0.75), (0.8, 0.68),
+        (0.4, 0.62), (0.6, 0.55), (0.25, 0.48), (0.75, 0.42), (0.5, 0.35),
+        (0.35, 0.28), (0.65, 0.22), (0.2, 0.18), (0.8, 0.15), (0.45, 0.12),
+        (0.55, 0.09), (0.3, 0.06), (0.7, 0.04), (0.4, 0.02), (0.6, 0.01)
     ]
     
-    // Computed property voor levels om te tonen
-    private var levelsToShow: [GameLevel] {
-        levelManager.getLevelsForMap(startIndex: startIndex, count: levelCount)
+    private var currentPageLevels: [GameLevel] {
+        let startIdx = currentPage * levelCount
+        return levelManager.getLevelsForMap(startIndex: startIdx, count: levelCount)
+    }
+    
+    private var totalPages: Int {
+        return (levelManager.getTotalLevelCount() + levelCount - 1) / levelCount
     }
     
     var body: some View {
@@ -63,22 +51,92 @@ struct MapLevelsView: View {
                     scrollPosition.scrollTo(edge: .bottom)
                 }
 
-                // Back button
-                Button {
-                    SoundManager.shared.playButtonTapSound()
-                    onBackTapped()
-                } label: {
-                    EmptyView()
+                // Navigation controls
+                VStack {
+                    HStack {
+                        // Back button
+                        Button {
+                            SoundManager.shared.playButtonTapSound()
+                            onBackTapped()
+                        } label: {
+                            EmptyView()
+                        }
+                        .buttonStyle(
+                            ImageButtonStyle(
+                                normalImage: "back-button-orange",
+                                pressedImage: "back-button-orange",
+                                height: 60.0
+                            )
+                        )
+                        
+                        Spacer()
+                        
+                        // Page info
+                        Text("Levels \(currentPage * levelCount + 1) - \(min((currentPage + 1) * levelCount, levelManager.getTotalLevelCount()))")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 8)
+                            .background(Color.black.opacity(0.6))
+                            .cornerRadius(20)
+                    }
+                    .padding(.top, 60.0)
+                    .padding(.horizontal, 20.0)
+                    
+                    Spacer()
+                    
+                    // Page navigation buttons
+                    if totalPages > 1 {
+                        HStack(spacing: 20) {
+                            // Previous page
+                            if currentPage > 0 {
+                                Button {
+                                    SoundManager.shared.playButtonTapSound()
+                                    withAnimation {
+                                        currentPage -= 1
+                                    }
+                                } label: {
+                                    Image(systemName: "chevron.left.circle.fill")
+                                        .font(.title)
+                                        .foregroundColor(.white)
+                                        .background(Color.black.opacity(0.6))
+                                        .clipShape(Circle())
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            // Page indicators
+                            HStack(spacing: 8) {
+                                ForEach(0..<totalPages, id: \.self) { page in
+                                    Circle()
+                                        .fill(page == currentPage ? Color.white : Color.white.opacity(0.5))
+                                        .frame(width: 10, height: 10)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            // Next page
+                            if currentPage < totalPages - 1 {
+                                Button {
+                                    SoundManager.shared.playButtonTapSound()
+                                    withAnimation {
+                                        currentPage += 1
+                                    }
+                                } label: {
+                                    Image(systemName: "chevron.right.circle.fill")
+                                        .font(.title)
+                                        .foregroundColor(.white)
+                                        .background(Color.black.opacity(0.6))
+                                        .clipShape(Circle())
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 40)
+                        .padding(.bottom, 40)
+                    }
                 }
-                .buttonStyle(
-                    ImageButtonStyle(
-                        normalImage: "back-button-orange",
-                        pressedImage: "back-button-orange",
-                        height: 60.0
-                    )
-                )
-                .padding(.top, 60.0)
-                .padding(.horizontal, 20.0)
             }
         }
         .ignoresSafeArea()
@@ -86,8 +144,7 @@ struct MapLevelsView: View {
     
     private func levelButtonsOverlay(in size: CGSize) -> some View {
         ZStack {
-            ForEach(Array(levelsToShow.enumerated()), id: \.element.id) { index, level in
-                // Zorg dat we niet buiten de posities array gaan
+            ForEach(Array(currentPageLevels.enumerated()), id: \.element.id) { index, level in
                 if index < levelPositions.count {
                     let position = levelPositions[index]
                     
@@ -141,39 +198,26 @@ struct MapLevelButton: View {
                     .frame(width: 70, height: 70)
                 
                 VStack(spacing: 0) {
-                    // Sterren - altijd 3 sterren in een ovaal/boog vorm
+                    // Sterren in boog vorm
                     ZStack {
                         ForEach(0..<3, id: \.self) { starIndex in
-                            let angle = (Double(starIndex) - 1.0) * 35.0 // -35°, 0°, +35° voor meer spreiding
-                            let radius: CGFloat = 20 // Meer afstand van center
+                            let angle = (Double(starIndex) - 1.0) * 35.0
+                            let radius: CGFloat = 20
                             let xOffset = sin(angle * .pi / 180) * radius
-                            let yOffset = -cos(angle * .pi / 180) * radius * 1 // 0.3 voor ovaal vorm
+                            let yOffset = -cos(angle * .pi / 180) * radius
                             
-                            if isUnlocked {
-                                // Voor unlocked levels: volle sterren of empty sterren
-                                Image(starIndex < starsEarned ? "star-big-icon" : "empty-star")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 14, height: 14) // Groter: van 10 naar 14
-                                    .shadow(color: .black.opacity(0.7), radius: 1)
-                                    .offset(x: xOffset, y: yOffset)
-                            } else {
-                                // Voor locked levels: altijd empty sterren
-                                Image("empty-star")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 14, height: 14) // Groter: van 10 naar 14
-//                                    .opacity(0.6) // Iets transparanter voor locked levels
-                                    .shadow(color: .black.opacity(0.5), radius: 1)
-                                    .offset(x: xOffset, y: yOffset)
-                            }
+                            Image(starIndex < starsEarned ? "star-big-icon" : "empty-star")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 14, height: 14)
+                                .shadow(color: .black.opacity(0.7), radius: 1)
+                                .offset(x: xOffset, y: yOffset)
+                                .opacity(isUnlocked ? 1.0 : 0.6)
                         }
                     }
-                    .frame(height: 25) // Meer hoogte voor grotere sterren en spreiding
-                    .padding(.bottom, 0)
+                    .frame(height: 25)
                     
-                    // Level nummer (altijd tonen)
-                    Text("\(level.levelInPack)")
+                    Text("\(level.id)")
                         .font(.custom("helsinki", size: 30))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -182,13 +226,12 @@ struct MapLevelButton: View {
                         .padding(.bottom, 40)
                         .padding(.trailing, 5)
                 }
-                .padding(.top, 8) // Positioneer content in het midden van de pointer
+                .padding(.top, 8)
             
             }
         }
         .disabled(!isUnlocked)
         .scaleEffect(isUnlocked ? 1.0 : 0.85)
-//        .opacity(isUnlocked ? 1.0 : 0.7)
         .animation(.easeInOut(duration: 0.2), value: isUnlocked)
     }
 }
@@ -197,8 +240,6 @@ struct MapLevelButton: View {
     MapLevelsView(
         onBackTapped: {},
         onLevelSelected: { _ in },
-        levelManager: LevelManager(),
-        startIndex: 0,
-        levelCount: 20
+        levelManager: LevelManager()
     )
 }

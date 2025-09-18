@@ -3,14 +3,14 @@ import Combine
 
 class LevelManager: ObservableObject {
     @Published var currentLevel: GameLevel
-    @Published var allLevels: [GameLevel] // Vervang availablePacks
-    @Published var completedLevels: Set<Int> = [] // IDs van voltooide levels
-    @Published var unlockedLevels: Set<Int> = [] // IDs van ontgrendelde levels
+    @Published var allLevels: [GameLevel]
+    @Published var completedLevels: Set<Int> = []
+    @Published var unlockedLevels: Set<Int> = []
     @Published var totalScore: Int = 0
     @Published var totalStarsEarned: Int = 0
     @Published var levelsCompleted: Int = 0
-    @Published var levelScores: [Int: Int] = [:] // levelId -> score
-    @Published var levelStars: [Int: Int] = [:] // levelId -> stars
+    @Published var levelScores: [Int: Int] = [:]
+    @Published var levelStars: [Int: Int] = [:]
     @Published var currentLives: Int = 3
     @Published var maxLives: Int = 3
     
@@ -22,8 +22,6 @@ class LevelManager: ObservableObject {
         for levelNum in 1...20 {
             levels.append(GameLevel(
                 id: levelNum,
-                packId: 1, // Keep for compatibility but not used
-                levelInPack: levelNum,
                 gridSize: 6,
                 fruitCount: min(3 + (levelNum - 1) / 5, 4),
                 startPosition: GridPosition(row: 0, col: 0),
@@ -37,8 +35,6 @@ class LevelManager: ObservableObject {
         for levelNum in 21...40 {
             levels.append(GameLevel(
                 id: levelNum,
-                packId: 2, // Keep for compatibility but not used
-                levelInPack: levelNum - 20,
                 gridSize: 8,
                 fruitCount: min(3 + (levelNum - 21) / 4, 5),
                 startPosition: GridPosition(row: 1, col: 1),
@@ -52,8 +48,6 @@ class LevelManager: ObservableObject {
         for levelNum in 41...60 {
             levels.append(GameLevel(
                 id: levelNum,
-                packId: 3, // Keep for compatibility but not used
-                levelInPack: levelNum - 40,
                 gridSize: 10,
                 fruitCount: min(4 + (levelNum - 41) / 3, 6),
                 startPosition: GridPosition(row: 2, col: 2),
@@ -83,14 +77,17 @@ class LevelManager: ObservableObject {
             return allLevels[currentIndex + 1]
         }
         
-        return nil // No more levels
+        return nil
+    }
+
+    func getLevel(byId id: Int) -> GameLevel? {
+        return allLevels.first { $0.id == id }
     }
 
     func completeLevel(_ levelId: Int, withScore score: Int, stars: Int) {
         let wasAlreadyCompleted = completedLevels.contains(levelId)
         
         if !wasAlreadyCompleted {
-            // Nieuwe completion
             completedLevels.insert(levelId)
             totalScore += score
             totalStarsEarned += stars
@@ -113,7 +110,7 @@ class LevelManager: ObservableObject {
             }
         }
         
-        // Unlock next level logic
+        // Unlock next level
         if !wasAlreadyCompleted {
             if let currentLevelIndex = allLevels.firstIndex(where: { $0.id == levelId }) {
                 if currentLevelIndex + 1 < allLevels.count {
@@ -144,6 +141,10 @@ class LevelManager: ObservableObject {
         return levelStars[levelId] ?? 0
     }
 
+    func getScoreForLevel(_ levelId: Int) -> Int {
+        return levelScores[levelId] ?? 0
+    }
+
     func loseLife() -> Bool {
         currentLives = max(0, currentLives - 1)
         return currentLives > 0
@@ -160,6 +161,39 @@ class LevelManager: ObservableObject {
     // Helper function to get levels for map view (chunks of 20)
     func getLevelsForMap(startIndex: Int = 0, count: Int = 20) -> [GameLevel] {
         let endIndex = min(startIndex + count, allLevels.count)
+        guard startIndex < allLevels.count && startIndex >= 0 else { return [] }
         return Array(allLevels[startIndex..<endIndex])
+    }
+
+    func getTotalLevelCount() -> Int {
+        return allLevels.count
+    }
+    
+    // MARK: - Easy Level Addition
+    func addLevel(
+        gridSize: Int,
+        fruitCount: Int,
+        startPosition: GridPosition,
+        targetMoves: Int,
+        baseScore: Int,
+        targetFruit: Fruit? = nil
+    ) {
+        let newId = (allLevels.last?.id ?? 0) + 1
+        let newLevel = GameLevel(
+            id: newId,
+            gridSize: gridSize,
+            fruitCount: fruitCount,
+            startPosition: startPosition,
+            targetFruit: targetFruit,
+            targetMoves: targetMoves,
+            baseScore: baseScore
+        )
+        
+        allLevels.append(newLevel)
+        
+        // If this is the first level, unlock it
+        if allLevels.count == 1 {
+            unlockedLevels.insert(newId)
+        }
     }
 }

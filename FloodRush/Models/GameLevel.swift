@@ -2,8 +2,6 @@ import SwiftUI
 
 struct GameLevel {
     let id: Int
-    let packId: Int
-    let levelInPack: Int
     let gridSize: Int
     let fruitCount: Int
     let startPosition: GridPosition
@@ -12,7 +10,7 @@ struct GameLevel {
     let baseScore: Int   // NIEUW: Basis score voor berekening
     
     var displayName: String {
-        return "Level \(levelInPack)"
+        return "Level \(id)"
     }
     
     // NIEUW: Bereken ster thresholds

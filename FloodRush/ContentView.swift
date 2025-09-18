@@ -57,9 +57,7 @@ struct ContentView: View {
                         startGame(with: level)
                     }
                 },
-                levelManager: levelManager,
-                startIndex: 0,
-                levelCount: 20
+                levelManager: levelManager
             )
             
         case .game:

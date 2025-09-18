@@ -78,10 +78,12 @@ class GameCenterManager: NSObject, ObservableObject {
     // MARK: - Leaderboards (iOS 14+ API)
     func submitScore(_ score: Int, category: String, completion: ((Bool) -> Void)? = nil) {
         guard isAuthenticated else {
-            print("Not authenticated with GameCenter")
+            print("❌ GameCenter not authenticated")
             completion?(false)
             return
         }
+        
+        print("🎯 Submitting score: \(score) to category: \(category)")
         
         Task {
             do {
@@ -93,12 +95,12 @@ class GameCenterManager: NSObject, ObservableObject {
                 )
                 
                 DispatchQueue.main.async {
-                    print("Score submitted successfully: \(score) to \(category)")
+                    print("✅ Score submitted successfully: \(score) to \(category)")
                     completion?(true)
                 }
             } catch {
                 DispatchQueue.main.async {
-                    print("Score submission failed: \(error.localizedDescription)")
+                    print("❌ Score submission failed: \(error.localizedDescription)")
                     completion?(false)
                 }
             }
@@ -263,7 +265,7 @@ class GameCenterManager: NSObject, ObservableObject {
         totalScore: Int
     ) {
         // Submit scores
-        submitLevelScore(levelId: levelId, score: score, moves: moves)
+        // submitLevelScore(levelId: levelId, score: score, moves: moves)
         submitOverallStats(totalScore: totalScore, totalStars: totalStars, levelsCompleted: totalLevelsCompleted)
         
         // Handle achievements

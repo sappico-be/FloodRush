@@ -224,6 +224,12 @@ class LevelManager: ObservableObject {
         
         // NIEUW: GameCenter Integration
         handleGameCenterSubmission(levelId: levelId, score: score, moves: moves, stars: stars, usedUndo: usedUndo)
+        // Na de GameCenter submission
+        print("🎮 Calling GameCenter with:")
+        print("   - Level ID: \(levelId)")
+        print("   - Score: \(score)")
+        print("   - Total Score: \(totalScore)")
+        print("   - Stars: \(stars)")
     }
     
     // NIEUW: GameCenter submission handler

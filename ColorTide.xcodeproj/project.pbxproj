@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		423222692E76C11200FA4B01 /* FloodRush.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FloodRush.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		423222692E76C11200FA4B01 /* ColorTide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ColorTide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		42C6962B2E77566400B06A32 /* Exceptions for "FloodRush" folder in "FloodRush" target */ = {
+		42C6962B2E77566400B06A32 /* Exceptions for "ColorTide" folder in "ColorTide" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 423222682E76C11200FA4B01 /* FloodRush */;
+			target = 423222682E76C11200FA4B01 /* ColorTide */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4232226B2E76C11200FA4B01 /* FloodRush */ = {
+		4232226B2E76C11200FA4B01 /* ColorTide */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				42C6962B2E77566400B06A32 /* Exceptions for "FloodRush" folder in "FloodRush" target */,
+				42C6962B2E77566400B06A32 /* Exceptions for "ColorTide" folder in "ColorTide" target */,
 			);
-			path = FloodRush;
+			path = ColorTide;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		423222602E76C11200FA4B01 = {
 			isa = PBXGroup;
 			children = (
-				4232226B2E76C11200FA4B01 /* FloodRush */,
+				4232226B2E76C11200FA4B01 /* ColorTide */,
 				4232226A2E76C11200FA4B01 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		4232226A2E76C11200FA4B01 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				423222692E76C11200FA4B01 /* FloodRush.app */,
+				423222692E76C11200FA4B01 /* ColorTide.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		423222682E76C11200FA4B01 /* FloodRush */ = {
+		423222682E76C11200FA4B01 /* ColorTide */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 423222742E76C11300FA4B01 /* Build configuration list for PBXNativeTarget "FloodRush" */;
+			buildConfigurationList = 423222742E76C11300FA4B01 /* Build configuration list for PBXNativeTarget "ColorTide" */;
 			buildPhases = (
 				423222652E76C11200FA4B01 /* Sources */,
 				423222662E76C11200FA4B01 /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4232226B2E76C11200FA4B01 /* FloodRush */,
+				4232226B2E76C11200FA4B01 /* ColorTide */,
 			);
-			name = FloodRush;
+			name = ColorTide;
 			packageProductDependencies = (
 			);
 			productName = FloodRush;
-			productReference = 423222692E76C11200FA4B01 /* FloodRush.app */;
+			productReference = 423222692E76C11200FA4B01 /* ColorTide.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 423222642E76C11200FA4B01 /* Build configuration list for PBXProject "FloodRush" */;
+			buildConfigurationList = 423222642E76C11200FA4B01 /* Build configuration list for PBXProject "ColorTide" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				423222682E76C11200FA4B01 /* FloodRush */,
+				423222682E76C11200FA4B01 /* ColorTide */,
 			);
 		};
 /* End PBXProject section */
@@ -259,7 +259,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = FloodRush/FloodRush.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ColorTide/ColorTide.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 43FB527U5F;
@@ -278,7 +278,7 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FloodRush/Info.plist;
+				INFOPLIST_FILE = ColorTide/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ColorTide;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -316,7 +316,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = FloodRush/FloodRush.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ColorTide/ColorTide.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 43FB527U5F;
@@ -335,7 +335,7 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FloodRush/Info.plist;
+				INFOPLIST_FILE = ColorTide/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ColorTide;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -371,7 +371,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		423222642E76C11200FA4B01 /* Build configuration list for PBXProject "FloodRush" */ = {
+		423222642E76C11200FA4B01 /* Build configuration list for PBXProject "ColorTide" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				423222722E76C11300FA4B01 /* Debug */,
@@ -380,7 +380,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		423222742E76C11300FA4B01 /* Build configuration list for PBXNativeTarget "FloodRush" */ = {
+		423222742E76C11300FA4B01 /* Build configuration list for PBXNativeTarget "ColorTide" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				423222752E76C11300FA4B01 /* Debug */,

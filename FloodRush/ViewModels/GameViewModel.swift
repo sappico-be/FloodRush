@@ -15,7 +15,7 @@ class GameViewModel: ObservableObject {
             fruitCount: level.fruitCount,
             startPosition: level.startPosition,
             targetFruit: level.targetFruit,
-            grid: Array(repeating: Array(repeating: Fruit.nut, count: level.gridSize), count: level.gridSize),
+            grid: level.getGrid(),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -32,7 +32,7 @@ class GameViewModel: ObservableObject {
             fruitCount: level.fruitCount,
             startPosition: level.startPosition,
             targetFruit: level.targetFruit,
-            grid: Array(repeating: Array(repeating: Fruit.nut, count: level.gridSize), count: level.gridSize),
+            grid: level.getGrid(),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -44,18 +44,7 @@ class GameViewModel: ObservableObject {
     }
 
     private func initializeGame() {
-        generateRandomGrid()
         updatePlayerArea()
-    }
-
-    private func generateRandomGrid() {
-        // Tijdelijke implementatie
-        for row in 0..<gameState.gridSize {
-            for col in 0..<gameState.gridSize {
-                let randomIndex = Int.random(in: 0..<min(gameState.fruitCount, GameState.availableFruits.count))
-                gameState.grid[row][col] = GameState.availableFruits[randomIndex]
-            }
-        }
     }
 
     func resetGame() {
@@ -64,7 +53,7 @@ class GameViewModel: ObservableObject {
             fruitCount: gameState.fruitCount,
             startPosition: gameState.startPosition,
             targetFruit: gameState.targetFruit,
-            grid: Array(repeating: Array(repeating: Fruit.nut, count: gameState.gridSize), count: gameState.gridSize),
+            grid: levelManager.currentLevel.getGrid(),
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -105,7 +94,7 @@ class GameViewModel: ObservableObject {
         let newCells = gameState.currentPlayerArea.subtracting(oldPlayerArea)
         let cellsGained = newCells.count
         
-        // NIEUWE SCORE BEREKENING
+        // Score berekening
         let movePoints = ScoreCalculator.calculateMoveScore(
             cellsGained: cellsGained,
             gridSize: gameState.gridSize
@@ -182,7 +171,7 @@ class GameViewModel: ObservableObject {
         gameState.currentPlayerArea = previousState.currentPlayerArea
         gameState.moveCount = previousState.moveCount
         gameState.totalScore = previousState.totalScore
-        gameState.isCompleted = false // Reset completion state
+        gameState.isCompleted = false
 
         SoundManager.shared.playUndoSound()
         SoundManager.shared.mediumHaptic()
@@ -211,7 +200,7 @@ class GameViewModel: ObservableObject {
         if gameState.currentPlayerArea.count == gameState.gridSize * gameState.gridSize {
             gameState.isCompleted = true
             
-            // NIEUWE FINAL SCORE BEREKENING
+            // Final score berekening
             let result = ScoreCalculator.calculateFinalScore(
                 level: levelManager.currentLevel,
                 actualMoves: gameState.moveCount,
@@ -224,7 +213,7 @@ class GameViewModel: ObservableObject {
             SoundManager.shared.playLevelCompleteSound()
             SoundManager.shared.successHaptic()
             
-            // Complete level met nieuwe score en stars
+            // Complete level
             levelManager.completeLevel(
                 levelManager.currentLevel.id,
                 withScore: result.score,
@@ -236,20 +225,22 @@ class GameViewModel: ObservableObject {
     private func resetLevelWithLifeLoss() {
         SoundManager.shared.errorHaptic()
         
-        // Reset game state maar behoud level
-        gameState.grid = Array(repeating: Array(repeating: Fruit.nut, count: gameState.gridSize), count: gameState.gridSize)
+        let currentLevel = levelManager.currentLevel
+        
+        // Reset game state - gebruik weer exact hetzelfde predefined grid!
+        gameState.grid = currentLevel.getGrid()
         gameState.currentPlayerArea = []
         gameState.moveCount = 0
         gameState.totalScore = 0
         gameState.gameHistory = []
         gameState.isCompleted = false
         
-        // Regenereer level
+        // Reinitialize
         initializeGame()
     }
 
     private func triggerGameOver() {
         SoundManager.shared.errorHaptic()
-        gameState.isCompleted = true // Dit triggert de overlay, maar dan voor game over
+        gameState.isCompleted = true
     }
 }

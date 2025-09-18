@@ -15,53 +15,114 @@ class LevelManager: ObservableObject {
     @Published var maxLives: Int = 3
     
     init() {
-        // Create all levels in sequence (60 levels total)
-        var levels: [GameLevel] = []
-        
-        // Levels 1-20: 6x6 grids (starter difficulty)
-        for levelNum in 1...20 {
-            levels.append(GameLevel(
-                id: levelNum,
-                gridSize: 6,
-                fruitCount: min(3 + (levelNum - 1) / 5, 4),
-                startPosition: GridPosition(row: 0, col: 0),
-                targetFruit: nil,
-                targetMoves: 8 + (levelNum - 1) / 3, // 8-14 moves
-                baseScore: 8000
-            ))
-        }
-        
-        // Levels 21-40: 8x8 grids (medium difficulty)
-        for levelNum in 21...40 {
-            levels.append(GameLevel(
-                id: levelNum,
-                gridSize: 8,
-                fruitCount: min(3 + (levelNum - 21) / 4, 5),
-                startPosition: GridPosition(row: 1, col: 1),
-                targetFruit: nil,
-                targetMoves: 12 + (levelNum - 21) / 2, // 12-22 moves
-                baseScore: 12000
-            ))
-        }
-        
-        // Levels 41-60: 10x10 grids (hard difficulty)
-        for levelNum in 41...60 {
-            levels.append(GameLevel(
-                id: levelNum,
-                gridSize: 10,
-                fruitCount: min(4 + (levelNum - 41) / 3, 6),
-                startPosition: GridPosition(row: 2, col: 2),
-                targetFruit: nil,
-                targetMoves: 18 + (levelNum - 41), // 18-38 moves
-                baseScore: 20000
-            ))
-        }
-
-        self.allLevels = levels
-        self.currentLevel = levels[0]
+        let allLevels = Self.createPredefinedLevels()
+        self.allLevels = allLevels
+        self.currentLevel = allLevels[0]
 
         // Unlock alleen het eerste level
         unlockedLevels = [1]
+    }
+
+    // MARK: - Predefined Level Creation
+    private static func createPredefinedLevels() -> [GameLevel] {
+        var levels: [GameLevel] = []
+        
+        // LEVEL 1: Tutorial level - easy pattern
+        levels.append(GameLevel(
+            id: 1,
+            gridSize: 6,
+            fruitCount: 3,
+            startPosition: GridPosition(row: 0, col: 0),
+            targetFruit: nil,
+            targetMoves: 8,
+            baseScore: 8000,
+            predefinedGrid: [
+                [.nut, .cherry, .nut, .cherry, .nut, .cherry],
+                [.cherry, .nut, .cherry, .nut, .cherry, .nut],
+                [.nut, .cherry, .strawberry, .strawberry, .cherry, .nut],
+                [.cherry, .nut, .strawberry, .strawberry, .nut, .cherry],
+                [.nut, .cherry, .nut, .cherry, .nut, .cherry],
+                [.cherry, .nut, .cherry, .nut, .cherry, .nut]
+            ]
+        ))
+        
+        // LEVEL 2: Introduce strategy
+        levels.append(GameLevel(
+            id: 2,
+            gridSize: 6,
+            fruitCount: 3,
+            startPosition: GridPosition(row: 0, col: 0),
+            targetFruit: nil,
+            targetMoves: 10,
+            baseScore: 8000,
+            predefinedGrid: [
+                [.nut, .nut, .cherry, .cherry, .nut, .nut],
+                [.nut, .strawberry, .cherry, .cherry, .strawberry, .nut],
+                [.strawberry, .strawberry, .nut, .nut, .strawberry, .strawberry],
+                [.strawberry, .strawberry, .nut, .nut, .strawberry, .strawberry],
+                [.nut, .strawberry, .cherry, .cherry, .strawberry, .nut],
+                [.nut, .nut, .cherry, .cherry, .nut, .nut]
+            ]
+        ))
+        
+        // LEVEL 3: More complex pattern
+        levels.append(GameLevel(
+            id: 3,
+            gridSize: 6,
+            fruitCount: 4,
+            startPosition: GridPosition(row: 0, col: 0),
+            targetFruit: nil,
+            targetMoves: 12,
+            baseScore: 8000,
+            predefinedGrid: [
+                [.nut, .cherry, .strawberry, .muchroom, .strawberry, .cherry],
+                [.cherry, .strawberry, .muchroom, .strawberry, .cherry, .nut],
+                [.strawberry, .muchroom, .nut, .cherry, .muchroom, .strawberry],
+                [.muchroom, .strawberry, .cherry, .nut, .strawberry, .muchroom],
+                [.strawberry, .cherry, .muchroom, .strawberry, .cherry, .nut],
+                [.cherry, .nut, .strawberry, .muchroom, .nut, .cherry]
+            ]
+        ))
+        
+        // LEVEL 4: Cross pattern challenge
+        levels.append(GameLevel(
+            id: 4,
+            gridSize: 6,
+            fruitCount: 3,
+            startPosition: GridPosition(row: 2, col: 2),
+            targetFruit: nil,
+            targetMoves: 9,
+            baseScore: 8000,
+            predefinedGrid: [
+                [.cherry, .cherry, .nut, .nut, .strawberry, .strawberry],
+                [.cherry, .cherry, .nut, .nut, .strawberry, .strawberry],
+                [.strawberry, .strawberry, .nut, .nut, .cherry, .cherry],
+                [.strawberry, .strawberry, .nut, .nut, .cherry, .cherry],
+                [.nut, .nut, .strawberry, .strawberry, .nut, .nut],
+                [.nut, .nut, .strawberry, .strawberry, .nut, .nut]
+            ]
+        ))
+        
+        // LEVEL 5: Diagonal challenge
+        levels.append(GameLevel(
+            id: 5,
+            gridSize: 6,
+            fruitCount: 4,
+            startPosition: GridPosition(row: 0, col: 0),
+            targetFruit: nil,
+            targetMoves: 11,
+            baseScore: 8000,
+            predefinedGrid: [
+                [.nut, .cherry, .strawberry, .muchroom, .strawberry, .cherry],
+                [.cherry, .nut, .cherry, .strawberry, .muchroom, .strawberry],
+                [.strawberry, .cherry, .nut, .cherry, .strawberry, .muchroom],
+                [.muchroom, .strawberry, .cherry, .nut, .cherry, .strawberry],
+                [.strawberry, .muchroom, .strawberry, .cherry, .nut, .cherry],
+                [.cherry, .strawberry, .muchroom, .strawberry, .cherry, .nut]
+            ]
+        ))
+        
+        return levels
     }
     
     func selectLevel(_ level: GameLevel) {
@@ -169,16 +230,18 @@ class LevelManager: ObservableObject {
         return allLevels.count
     }
     
-    // MARK: - Easy Level Addition
-    func addLevel(
+    // MARK: - Level Creation Helper (voor development)
+    func addPredefinedLevel(
         gridSize: Int,
         fruitCount: Int,
         startPosition: GridPosition,
         targetMoves: Int,
         baseScore: Int,
+        grid: [[Fruit]],
         targetFruit: Fruit? = nil
     ) {
         let newId = (allLevels.last?.id ?? 0) + 1
+        
         let newLevel = GameLevel(
             id: newId,
             gridSize: gridSize,
@@ -186,12 +249,12 @@ class LevelManager: ObservableObject {
             startPosition: startPosition,
             targetFruit: targetFruit,
             targetMoves: targetMoves,
-            baseScore: baseScore
+            baseScore: baseScore,
+            predefinedGrid: grid
         )
         
         allLevels.append(newLevel)
         
-        // If this is the first level, unlock it
         if allLevels.count == 1 {
             unlockedLevels.insert(newId)
         }

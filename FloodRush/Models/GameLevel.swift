@@ -6,8 +6,9 @@ struct GameLevel {
     let fruitCount: Int
     let startPosition: GridPosition
     let targetFruit: Fruit?
-    let targetMoves: Int // NIEUW: Optimaal aantal moves
-    let baseScore: Int   // NIEUW: Basis score voor berekening
+    let targetMoves: Int
+    let baseScore: Int
+    let predefinedGrid: [[Fruit]]
     
     var displayName: String {
         return "Level \(id)"
@@ -29,5 +30,10 @@ struct GameLevel {
         case 10: return 500
         default: return 350
         }
+    }
+    
+    // NIEUW: Gewoon het predefined grid teruggeven
+    func getGrid() -> [[Fruit]] {
+        return predefinedGrid
     }
 }

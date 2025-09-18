@@ -1,18 +1,17 @@
 import SwiftUI
-import Foundation
 
 struct WinOverlayView: View {
     let moveCount: Int
     let score: Int
     let onResetGame: (() -> Void)?
-    let onNextLevel: (() -> Void)?
+    let onNextLevel: (() -> Void)? // AANGEPAST: Dit triggert nu de animatie
     let onBackToHomeTapped: (() -> Void)?
     let onBackToLevelsTapped: (() -> Void)?
     let hasNextLevel: Bool
-    let targetMoves: Int // NIEUW
-    let starsEarned: Int // NIEUW - krijg dit van ScoreCalculator
+    let targetMoves: Int
+    let starsEarned: Int
 
-    // Animation states
+    // Animation states... (rest blijft hetzelfde)
     @State private var star1Offset: CGPoint = CGPoint(x: 0, y: -500)
     @State private var star2Offset: CGPoint = CGPoint(x: 0, y: -600)
     @State private var star3Offset: CGPoint = CGPoint(x: 0, y: -550)
@@ -29,14 +28,12 @@ struct WinOverlayView: View {
     @State private var flashEffect: Double = 0
     @State private var heartTextScale: CGFloat = 3.0
     @State private var heartTextOpacity: Double = 0.0
-    
-    // Efficiency text animation states
     @State private var efficiencyTextScale: CGFloat = 3.0
     @State private var efficiencyTextOpacity: Double = 0.0
 
     var body: some View {
         ZStack {
-            // Flash effect BEHIND everything else - complete screen coverage
+            // Flash effect BEHIND everything else
             Rectangle()
                 .fill(Color.white.opacity(flashEffect))
                 .ignoresSafeArea(.all, edges: .all)
@@ -94,8 +91,6 @@ struct WinOverlayView: View {
                     .font(.custom("helsinki", size: 12))
             }
             
-            // Efficiency indicator is nu verwijderd uit de statische content
-            
             HStack(spacing: 20.0) {
                 heartsEarnedView
                 resetButton
@@ -140,14 +135,12 @@ struct WinOverlayView: View {
             HStack(spacing: 0) {
                 // Star 1 - Left
                 ZStack {
-                    // Empty star (always visible)
                     Image("star-empty-left-icon")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 55, height: 55)
                         .opacity(0.3)
                     
-                    // Earned star (overlay)
                     if starsEarned >= 1 {
                         StarView(
                             imageName: "star-full-left-icon",
@@ -163,14 +156,12 @@ struct WinOverlayView: View {
                 
                 // Star 2 - Big center star
                 ZStack {
-                    // Empty star (always visible)
                     Image("star-empty-big-icon")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 77, height: 77) // 55 * 1.4
+                        .frame(width: 77, height: 77)
                         .opacity(0.3)
                     
-                    // Earned star (overlay)
                     if starsEarned >= 2 {
                         StarView(
                             imageName: "star-full-big-icon",
@@ -187,14 +178,12 @@ struct WinOverlayView: View {
                 
                 // Star 3 - Right
                 ZStack {
-                    // Empty star (always visible)
                     Image("star-empty-right-icon")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 55, height: 55)
                         .opacity(0.3)
                     
-                    // Earned star (overlay)
                     if starsEarned >= 3 {
                         StarView(
                             imageName: "star-full-right-icon",
@@ -221,6 +210,25 @@ struct WinOverlayView: View {
         .padding(.top, -90)
     }
     
+    // BELANGRIJK: Next button triggert nu de animatie in plaats van direct naar next level
+    private var nextButton: some View {
+        Button {
+            SoundManager.shared.playButtonTapSound()
+            // Dit triggert nu de map view met animatie!
+            onNextLevel?()
+        } label: {
+            EmptyView()
+        }
+        .buttonStyle(
+            ImageButtonStyle(
+                normalImage: "next-button",
+                pressedImage: "next-button",
+                height: 65.0
+            )
+        )
+    }
+    
+    // Alle andere functies blijven hetzelfde...
     private func startStarAnimation() {
         animateStar1()
         animateStar2()
@@ -228,21 +236,17 @@ struct WinOverlayView: View {
     }
     
     private func startEfficiencyTextAnimation() {
-        // Alleen animeren als er een efficiency bericht is
         guard moveCount <= targetMoves + 3 else { return }
         
-        // Start de animatie na een korte vertraging (na de sterren animaties zijn begonnen)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-            // Zoom in vanuit het scherm (groot naar normaal) met fade in
             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                 efficiencyTextScale = 1.0
                 efficiencyTextOpacity = 1.0
             }
             
-            // Zoom uit terug naar het scherm (normaal naar groot) met fade out na 2.5 seconden
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                 withAnimation(.easeIn(duration: 1.0)) {
-                    efficiencyTextScale = 3.0 // Terug naar groot (alsof het weer het scherm in verdwijnt)
+                    efficiencyTextScale = 3.0
                     efficiencyTextOpacity = 0.0
                 }
             }
@@ -253,42 +257,33 @@ struct WinOverlayView: View {
         guard starsEarned >= 1 else { return }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            // FAST METEOR FALL
             withAnimation(.easeIn(duration: 0.4)) {
                 star1Offset = CGPoint(x: 0, y: 0)
-                star1Rotation = 720 // 2 full spins
+                star1Rotation = 720
             }
             
-            // MASSIVE IMPACT
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                // SUCCESS NOTIFICATION VIBRATION (like message received)
                 let notificationFeedback = UINotificationFeedbackGenerator()
                 notificationFeedback.notificationOccurred(.success)
                 
-                // Scale bounce for impact
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.3)) {
-                    star1Scale = 1.4 // Big bounce, no distortion
+                    star1Scale = 1.4
                 }
                 
-                // SCREEN SHAKE
                 massiveScreenShake(intensity: 12)
                 
-                // Flash effect
                 withAnimation(.easeOut(duration: 0.1)) {
                     flashEffect = 0.3
                 }
                 
-                // Individual star shake
                 individualStarShake(starIndex: 1, intensity: 10)
                 
-                // Settle scale
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                         star1Scale = 1.0
                     }
                 }
                 
-                // Clear flash
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     withAnimation(.easeOut(duration: 0.5)) {
                         flashEffect = 0
@@ -302,47 +297,37 @@ struct WinOverlayView: View {
         guard starsEarned >= 2 else { return }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            // SUPER FAST METEOR FALL
             withAnimation(.easeIn(duration: 0.5)) {
                 star2Offset = CGPoint(x: 0, y: 0)
-                star2Rotation = 1080 // 3 full spins!
+                star2Rotation = 1080
             }
             
-            // CATASTROPHIC IMPACT
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                // DOUBLE SUCCESS NOTIFICATION (nuclear impact)
                 let notificationFeedback = UINotificationFeedbackGenerator()
                 notificationFeedback.notificationOccurred(.success)
                 
-                // Second notification vibration for extra impact
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     notificationFeedback.notificationOccurred(.success)
                 }
                 
-                // HUGE scale bounce
                 withAnimation(.spring(response: 0.15, dampingFraction: 0.2)) {
-                    star2Scale = 1.8 // Massive bounce
+                    star2Scale = 1.8
                 }
                 
-                // NUCLEAR SCREEN SHAKE
                 massiveScreenShake(intensity: 25)
                 
-                // BRIGHT flash effect
                 withAnimation(.easeOut(duration: 0.15)) {
                     flashEffect = 0.6
                 }
                 
-                // Extreme individual shake
                 individualStarShake(starIndex: 2, intensity: 20)
                 
-                // Settle scale
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
                         star2Scale = 1.0
                     }
                 }
                 
-                // Clear flash
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     withAnimation(.easeOut(duration: 0.8)) {
                         flashEffect = 0
@@ -356,47 +341,37 @@ struct WinOverlayView: View {
         guard starsEarned >= 3 else { return }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
-            // FAST METEOR FALL
             withAnimation(.easeIn(duration: 0.45)) {
                 star3Offset = CGPoint(x: 0, y: 0)
-                star3Rotation = 540 // 1.5 spins
+                star3Rotation = 540
             }
             
-            // BIG IMPACT
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                // SUCCESS NOTIFICATION VIBRATION
                 let notificationFeedback = UINotificationFeedbackGenerator()
                 notificationFeedback.notificationOccurred(.success)
                 
-                // Reset rotation to normal
                 withAnimation(.easeOut(duration: 0.1)) {
-                    star3Rotation = 0 // Stop spinning, back to normal
+                    star3Rotation = 0
                 }
                 
-                // Scale bounce
                 withAnimation(.spring(response: 0.25, dampingFraction: 0.3)) {
                     star3Scale = 1.5
                 }
                 
-                // Strong screen shake
                 massiveScreenShake(intensity: 15)
                 
-                // Flash effect
                 withAnimation(.easeOut(duration: 0.12)) {
                     flashEffect = 0.4
                 }
                 
-                // Individual shake
                 individualStarShake(starIndex: 3, intensity: 12)
                 
-                // Settle scale
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.8)) {
                         star3Scale = 1.0
                     }
                 }
                 
-                // Clear flash
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
                     withAnimation(.easeOut(duration: 0.6)) {
                         flashEffect = 0
@@ -422,7 +397,6 @@ struct WinOverlayView: View {
             }
         }
         
-        // Reset screen shake
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             withAnimation(.easeOut(duration: 0.4)) {
                 screenShake = 0
@@ -451,7 +425,6 @@ struct WinOverlayView: View {
             }
         }
         
-        // Reset individual shake
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             withAnimation(.easeOut(duration: 0.3)) {
                 switch starIndex {
@@ -505,32 +478,13 @@ struct WinOverlayView: View {
         }
     }
     
-    // Voeg deze functie toe aan je WinOverlayView
     private func startHeartTextAnimation() {
-        // Start de animatie na een korte vertraging
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            // Fade in en scale down tegelijk
             withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
                 heartTextScale = 1.0
                 heartTextOpacity = 1.0
             }
         }
-    }
-    
-    private var nextButton: some View {
-        Button {
-            SoundManager.shared.playButtonTapSound()
-            onNextLevel?()
-        } label: {
-            EmptyView()
-        }
-        .buttonStyle(
-            ImageButtonStyle(
-                normalImage: "next-button",
-                pressedImage: "next-button",
-                height: 65.0
-            )
-        )
     }
     
     private var resetButton: some View {
@@ -586,18 +540,4 @@ struct StarView: View {
             .opacity(isEarned ? 1.0 : 0.3)
             .shadow(color: isEarned ? .yellow : .clear, radius: scale > 1.0 ? 15 : 0)
     }
-}
-
-#Preview {
-    WinOverlayView(
-        moveCount: 15,
-        score: 1250,
-        onResetGame: {},
-        onNextLevel: {},
-        onBackToHomeTapped: {},
-        onBackToLevelsTapped: {},
-        hasNextLevel: true,
-        targetMoves: 5,
-        starsEarned: 3
-    )
 }

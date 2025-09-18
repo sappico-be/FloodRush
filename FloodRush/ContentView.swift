@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  FloodRush
-//
-//  Created by Kris Weytjens on 14/09/2025.
-//
-
 import SwiftUI
 
 enum GameScreen {
@@ -19,12 +12,12 @@ struct ContentView: View {
     @StateObject private var levelManager = LevelManager()
     @State private var currentScreen: GameScreen = .loadingAnimation
     @State private var gameViewModel: GameViewModel?
+    @State private var shouldAnimateToNextLevel: Bool = false // NIEUW: Track animation state
     
     var body: some View {
         switch currentScreen {
         case .loadingAnimation:
             LoadingAnimationView {
-                // Callback wanneer animatie voltooid is
                 withAnimation {
                     currentScreen = .home
                 }
@@ -38,6 +31,7 @@ struct ContentView: View {
                     }
                 },
                 onLevelPacksTapped: {
+                    shouldAnimateToNextLevel = false // Reset animation flag
                     currentScreen = .map
                 },
                 onLeaderboardTapped: {
@@ -57,7 +51,11 @@ struct ContentView: View {
                         startGame(with: level)
                     }
                 },
-                levelManager: levelManager
+                levelManager: levelManager,
+                shouldAnimateToLevel: shouldAnimateToNextLevel, // NIEUW: Pass animation flag
+                onAnimationComplete: {
+                    shouldAnimateToNextLevel = false // Reset after animation
+                }
             )
             
         case .game:
@@ -66,10 +64,16 @@ struct ContentView: View {
                     viewModel: viewModel,
                     levelManager: levelManager,
                     onBackToLevelSelect: {
+                        shouldAnimateToNextLevel = false // No animation when going back manually
                         currentScreen = .map
                     },
                     onBackToHomeTapped: {
                         currentScreen = .home
+                    },
+                    onNextLevelTapped: {
+                        // NIEUW: Trigger animatie naar next level
+                        shouldAnimateToNextLevel = true
+                        currentScreen = .map
                     }
                 )
             }

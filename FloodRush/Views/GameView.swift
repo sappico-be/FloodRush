@@ -7,6 +7,7 @@ struct GameView: View {
     let levelManager: LevelManager
     let onBackToLevelSelect: (() -> Void)?
     let onBackToHomeTapped: (() -> Void)?
+    let onNextLevelTapped: (() -> Void)? // NIEUW: Callback voor next level animatie
     @State private var particles: [ParticleData] = []
     @State private var scorePosition: CGPoint = CGPoint(x: 250, y: 95)
 
@@ -47,7 +48,8 @@ struct GameView: View {
                                 viewModel.resetGame()
                             },
                             onNextLevel: {
-                                let _ = viewModel.goToNextLevel()
+                                // NIEUW: Trigger animatie naar next level
+                                onNextLevelTapped?()
                             },
                             onBackToHomeTapped: {
                                 onBackToHomeTapped?()
@@ -77,7 +79,6 @@ struct GameView: View {
         .ignoresSafeArea()
     }
 
-    // VOEG DEZE HELPER FUNCTIE TOE aan je GameView struct:
     private func calculateCurrentStars() -> Int {
         let result = ScoreCalculator.calculateFinalScore(
             level: levelManager.currentLevel,
@@ -264,10 +265,7 @@ struct GameView: View {
     }
 
     private func addScoreParticle(points: Int, from startPosition: CGPoint) {
-//        let scorePosition = CGPoint(x: 80, y: 30)
-        
-        // Voor grote scores, maak meerdere particles
-        let particleCount = min(3, max(1, points / 100)) // 1-3 particles afhankelijk van punten
+        let particleCount = min(3, max(1, points / 100))
         
         for i in 0..<particleCount {
             let delayedPosition = CGPoint(
@@ -281,7 +279,6 @@ struct GameView: View {
                 endPosition: scorePosition
             )
             
-            // Stagger de particles een beetje
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.1) {
                 particles.append(particle)
             }
@@ -338,11 +335,8 @@ struct StrokeModifier: ViewModifier {
     GameView(
         viewModel: GameViewModel(levelManager: LevelManager()),
         levelManager: LevelManager(),
-        onBackToLevelSelect: {
-            
-        },
-        onBackToHomeTapped: {
-            
-        }
+        onBackToLevelSelect: {},
+        onBackToHomeTapped: {},
+        onNextLevelTapped: {}
     )
 }

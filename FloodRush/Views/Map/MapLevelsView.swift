@@ -3,12 +3,15 @@ import SwiftUI
 struct MapLevelsView: View {
     let onBackTapped: () -> Void
     let onLevelSelected: (GameLevel) -> Void
-    @ObservedObject var levelManager: LevelManager // Voor toegang tot save data
-    let startIndex: Int = 0 // Welke levels te tonen (0, 20, 40, etc.)
-    let levelCount: Int = 20 // Hoeveel levels te tonen (default 20)
+    @ObservedObject var levelManager: LevelManager
+    let shouldAnimateToLevel: Bool // NIEUW: Should we animate to next level?
+    let onAnimationComplete: () -> Void // NIEUW: Callback when animation is done
     
     @State private var scrollPosition = ScrollPosition(edge: .bottom)
     @State private var currentPage: Int = 0
+    @State private var playerPosition: CGPoint = .zero // NIEUW: Player position
+    @State private var showPlayer: Bool = false // NIEUW: Show player sprite
+    @State private var isAnimating: Bool = false // NIEUW: Animation state
     
     // Level posities als percentage van de kaart (x: 0-1, y: 0-1)
     private let levelPositions: [(x: Double, y: Double)] = [
@@ -19,12 +22,12 @@ struct MapLevelsView: View {
     ]
     
     private var currentPageLevels: [GameLevel] {
-        let startIdx = currentPage * levelCount
-        return levelManager.getLevelsForMap(startIndex: startIdx, count: levelCount)
+        let startIdx = currentPage * 20
+        return levelManager.getLevelsForMap(startIndex: startIdx, count: 20)
     }
     
     private var totalPages: Int {
-        return (levelManager.getTotalLevelCount() + levelCount - 1) / levelCount
+        return (levelManager.getTotalLevelCount() + 20 - 1) / 20
     }
     
     var body: some View {
@@ -39,8 +42,15 @@ struct MapLevelsView: View {
                             .frame(width: geometry.size.width)
                             .clipped()
                             .overlay {
-                                // Level buttons over de kaart
                                 levelButtonsOverlay(in: geometry.size)
+                            }
+                            .overlay {
+                                // NIEUW: Player sprite overlay
+                                if showPlayer {
+                                    playerSprite
+                                        .position(playerPosition)
+                                        .animation(.easeInOut(duration: 2.0), value: playerPosition)
+                                }
                             }
                     }
                 }
@@ -49,97 +59,218 @@ struct MapLevelsView: View {
                 .scrollPosition($scrollPosition)
                 .onAppear {
                     scrollPosition.scrollTo(edge: .bottom)
+                    
+                    // NIEUW: Start animation if needed
+                    if shouldAnimateToLevel {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            startPlayerAnimation(in: geometry.size)
+                        }
+                    }
                 }
-
+                
                 // Navigation controls
-                VStack {
-                    HStack {
-                        // Back button
-                        Button {
-                            SoundManager.shared.playButtonTapSound()
-                            onBackTapped()
-                        } label: {
-                            EmptyView()
-                        }
-                        .buttonStyle(
-                            ImageButtonStyle(
-                                normalImage: "back-button-orange",
-                                pressedImage: "back-button-orange",
-                                height: 60.0
-                            )
-                        )
-                        
-                        Spacer()
-                        
-                        // Page info
-                        Text("Levels \(currentPage * levelCount + 1) - \(min((currentPage + 1) * levelCount, levelManager.getTotalLevelCount()))")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 15)
-                            .padding(.vertical, 8)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(20)
-                    }
-                    .padding(.top, 60.0)
-                    .padding(.horizontal, 20.0)
-                    
-                    Spacer()
-                    
-                    // Page navigation buttons
-                    if totalPages > 1 {
-                        HStack(spacing: 20) {
-                            // Previous page
-                            if currentPage > 0 {
-                                Button {
-                                    SoundManager.shared.playButtonTapSound()
-                                    withAnimation {
-                                        currentPage -= 1
-                                    }
-                                } label: {
-                                    Image(systemName: "chevron.left.circle.fill")
-                                        .font(.title)
-                                        .foregroundColor(.white)
-                                        .background(Color.black.opacity(0.6))
-                                        .clipShape(Circle())
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            // Page indicators
-                            HStack(spacing: 8) {
-                                ForEach(0..<totalPages, id: \.self) { page in
-                                    Circle()
-                                        .fill(page == currentPage ? Color.white : Color.white.opacity(0.5))
-                                        .frame(width: 10, height: 10)
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            // Next page
-                            if currentPage < totalPages - 1 {
-                                Button {
-                                    SoundManager.shared.playButtonTapSound()
-                                    withAnimation {
-                                        currentPage += 1
-                                    }
-                                } label: {
-                                    Image(systemName: "chevron.right.circle.fill")
-                                        .font(.title)
-                                        .foregroundColor(.white)
-                                        .background(Color.black.opacity(0.6))
-                                        .clipShape(Circle())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 40)
-                        .padding(.bottom, 40)
-                    }
-                }
+                navigationControls
             }
         }
         .ignoresSafeArea()
+    }
+    
+    // NIEUW: Player sprite
+    private var playerSprite: some View {
+        ZStack {
+            // Player character - je kunt dit vervangen met je eigen sprite
+            Image(systemName: "figure.walk.circle.fill")
+                .font(.title)
+                .foregroundColor(.blue)
+                .background(
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 30, height: 30)
+                )
+                .shadow(radius: 3)
+            
+            // Optional: Trail effect
+            if isAnimating {
+                Circle()
+                    .fill(Color.blue.opacity(0.3))
+                    .frame(width: 40, height: 40)
+                    .scaleEffect(isAnimating ? 1.5 : 1.0)
+                    .opacity(isAnimating ? 0.0 : 0.8)
+                    .animation(.easeOut(duration: 0.8).repeatForever(autoreverses: false), value: isAnimating)
+            }
+        }
+    }
+    
+    // NIEUW: Start player animation to next level
+    private func startPlayerAnimation(in size: CGSize) {
+        guard let currentLevel = getCurrentLevel(),
+              let nextLevel = levelManager.nextLevel() else {
+            onAnimationComplete()
+            return
+        }
+        
+        // Find positions of current and next level
+        let currentLevelIndex = currentLevel.id - 1 - (currentPage * 20)
+        let nextLevelIndex = nextLevel.id - 1 - (currentPage * 20)
+        
+        guard currentLevelIndex < levelPositions.count,
+              nextLevelIndex < levelPositions.count else {
+            onAnimationComplete()
+            return
+        }
+        
+        let currentPos = levelPositions[currentLevelIndex]
+        let nextPos = levelPositions[nextLevelIndex]
+        
+        // Set initial position
+        playerPosition = CGPoint(
+            x: size.width * currentPos.x,
+            y: size.height * currentPos.y
+        )
+        
+        // Show player and start animation
+        showPlayer = true
+        isAnimating = true
+        
+        // Play sound
+        SoundManager.shared.playSuccessSound()
+        
+        // Animate to next level
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 2.0)) {
+                playerPosition = CGPoint(
+                    x: size.width * nextPos.x,
+                    y: size.height * nextPos.y
+                )
+            }
+        }
+        
+        // Complete animation and auto-select next level
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+            isAnimating = false
+            
+            // Flash effect on arrival
+            withAnimation(.easeInOut(duration: 0.3).repeatCount(3, autoreverses: true)) {
+                // You could add a flash effect here
+            }
+            
+            // Play arrival sound
+            SoundManager.shared.playLevelCompleteSound()
+            SoundManager.shared.successHaptic()
+            
+            // Auto-select next level after a short pause
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                showPlayer = false
+                levelManager.selectLevel(nextLevel)
+                onLevelSelected(nextLevel)
+                onAnimationComplete()
+            }
+        }
+    }
+    
+    // NIEUW: Get current level for animation
+    private func getCurrentLevel() -> GameLevel? {
+        return levelManager.allLevels.first { $0.id == levelManager.currentLevel.id }
+    }
+    
+    private var navigationControls: some View {
+        VStack {
+            HStack {
+                // Back button - disabled during animation
+                Button {
+                    if !isAnimating {
+                        SoundManager.shared.playButtonTapSound()
+                        onBackTapped()
+                    }
+                } label: {
+                    EmptyView()
+                }
+                .buttonStyle(
+                    ImageButtonStyle(
+                        normalImage: "back-button-orange",
+                        pressedImage: "back-button-orange",
+                        height: 60.0
+                    )
+                )
+                .disabled(isAnimating)
+                .opacity(isAnimating ? 0.5 : 1.0)
+                
+                Spacer()
+                
+                // Page info
+                Text("Levels \(currentPage * 20 + 1) - \(min((currentPage + 1) * 20, levelManager.getTotalLevelCount()))")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 8)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(20)
+            }
+            .padding(.top, 60.0)
+            .padding(.horizontal, 20.0)
+            
+            Spacer()
+            
+            // Page navigation buttons - disabled during animation
+            if totalPages > 1 {
+                HStack(spacing: 20) {
+                    // Previous page
+                    if currentPage > 0 {
+                        Button {
+                            if !isAnimating {
+                                SoundManager.shared.playButtonTapSound()
+                                withAnimation {
+                                    currentPage -= 1
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .disabled(isAnimating)
+                        .opacity(isAnimating ? 0.5 : 1.0)
+                    }
+                    
+                    Spacer()
+                    
+                    // Page indicators
+                    HStack(spacing: 8) {
+                        ForEach(0..<totalPages, id: \.self) { page in
+                            Circle()
+                                .fill(page == currentPage ? Color.white : Color.white.opacity(0.5))
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Next page
+                    if currentPage < totalPages - 1 {
+                        Button {
+                            if !isAnimating {
+                                SoundManager.shared.playButtonTapSound()
+                                withAnimation {
+                                    currentPage += 1
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .disabled(isAnimating)
+                        .opacity(isAnimating ? 0.5 : 1.0)
+                    }
+                }
+                .padding(.horizontal, 40)
+                .padding(.bottom, 40)
+            }
+        }
     }
     
     private func levelButtonsOverlay(in size: CGSize) -> some View {
@@ -151,10 +282,13 @@ struct MapLevelsView: View {
                     MapLevelButton(
                         level: level,
                         levelManager: levelManager,
+                        isDisabled: isAnimating, // NIEUW: Disable during animation
                         onTapped: {
-                            SoundManager.shared.playButtonTapSound()
-                            SoundManager.shared.selectionHaptic()
-                            onLevelSelected(level)
+                            if !isAnimating {
+                                SoundManager.shared.playButtonTapSound()
+                                SoundManager.shared.selectionHaptic()
+                                onLevelSelected(level)
+                            }
                         }
                     )
                     .position(
@@ -170,6 +304,7 @@ struct MapLevelsView: View {
 struct MapLevelButton: View {
     let level: GameLevel
     @ObservedObject var levelManager: LevelManager
+    let isDisabled: Bool // NIEUW: External disable state
     let onTapped: () -> Void
     
     private var isUnlocked: Bool {
@@ -186,12 +321,11 @@ struct MapLevelButton: View {
     
     var body: some View {
         Button(action: {
-            if isUnlocked {
+            if isUnlocked && !isDisabled {
                 onTapped()
             }
         }) {
             ZStack {
-                // Pointer image gebaseerd op unlock status
                 Image(isUnlocked ? "pointer-enabled" : "pointer-disabled")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -217,6 +351,7 @@ struct MapLevelButton: View {
                     }
                     .frame(height: 25)
                     
+                    // Level nummer
                     Text("\(level.id)")
                         .font(.custom("helsinki", size: 30))
                         .fontWeight(.bold)
@@ -227,11 +362,11 @@ struct MapLevelButton: View {
                         .padding(.trailing, 5)
                 }
                 .padding(.top, 8)
-            
             }
         }
-        .disabled(!isUnlocked)
-        .scaleEffect(isUnlocked ? 1.0 : 0.85)
+        .disabled(!isUnlocked || isDisabled)
+        .scaleEffect(isUnlocked && !isDisabled ? 1.0 : 0.85)
+        .opacity(isDisabled ? 0.7 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isUnlocked)
     }
 }
@@ -240,6 +375,8 @@ struct MapLevelButton: View {
     MapLevelsView(
         onBackTapped: {},
         onLevelSelected: { _ in },
-        levelManager: LevelManager()
+        levelManager: LevelManager(),
+        shouldAnimateToLevel: false,
+        onAnimationComplete: {}
     )
 }

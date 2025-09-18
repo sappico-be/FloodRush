@@ -5,6 +5,7 @@ import AVFoundation
 class GameViewModel: ObservableObject {
     @Published private(set) var gameState: GameState
     let levelManager: LevelManager
+    private var usedUndo: Bool = false // NIEUW: Track undo usage
 
     init(levelManager: LevelManager) {
         self.levelManager = levelManager
@@ -15,7 +16,7 @@ class GameViewModel: ObservableObject {
             fruitCount: level.fruitCount,
             startPosition: level.startPosition,
             targetFruit: level.targetFruit,
-            grid: level.getGrid(),
+            grid: level.getGrid(), // NIEUW: Gebruik predefined grid
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -27,12 +28,13 @@ class GameViewModel: ObservableObject {
     }
 
     func loadLevel(_ level: GameLevel) {
+        usedUndo = false // Reset undo tracking
         gameState = GameState(
             gridSize: level.gridSize,
             fruitCount: level.fruitCount,
             startPosition: level.startPosition,
             targetFruit: level.targetFruit,
-            grid: level.getGrid(),
+            grid: level.getGrid(), // NIEUW: Gebruik predefined grid
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -48,12 +50,15 @@ class GameViewModel: ObservableObject {
     }
 
     func resetGame() {
+        usedUndo = false // Reset undo tracking
+        let currentLevel = levelManager.currentLevel
+        
         gameState = GameState(
             gridSize: gameState.gridSize,
             fruitCount: gameState.fruitCount,
             startPosition: gameState.startPosition,
             targetFruit: gameState.targetFruit,
-            grid: levelManager.currentLevel.getGrid(),
+            grid: currentLevel.getGrid(), // NIEUW: Herlaad exact hetzelfde predefined grid
             currentPlayerArea: [],
             moveCount: 0,
             isCompleted: false,
@@ -165,6 +170,8 @@ class GameViewModel: ObservableObject {
             return false
         }
         
+        usedUndo = true // NIEUW: Mark that undo was used
+        
         let previousState = gameState.gameHistory.removeLast()
         
         gameState.grid = previousState.grid
@@ -213,11 +220,13 @@ class GameViewModel: ObservableObject {
             SoundManager.shared.playLevelCompleteSound()
             SoundManager.shared.successHaptic()
             
-            // Complete level
+            // Complete level met GameCenter data
             levelManager.completeLevel(
                 levelManager.currentLevel.id,
                 withScore: result.score,
-                stars: result.stars
+                stars: result.stars,
+                moves: gameState.moveCount, // NIEUW: Pass moves
+                usedUndo: usedUndo // NIEUW: Pass undo usage
             )
         }
     }

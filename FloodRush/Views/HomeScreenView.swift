@@ -8,6 +8,8 @@ struct HomeScreenView: View {
     let onLeaderboardTapped: () -> Void
     let onSettingsTapped: () -> Void
     
+    @StateObject private var gameCenterManager = GameCenterManager.shared
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -20,12 +22,6 @@ struct HomeScreenView: View {
                     )
                     .scaleEffect(1.1)
                     .clipped()
-    //            HStack {
-    //                livesButton
-    //                Spacer()
-    //                pointsView
-    //            }
-    //            .padding(.top, 0)
 
                 logoView(geometry: geometry)
                 
@@ -36,6 +32,34 @@ struct HomeScreenView: View {
                         levelsButton
                         leaderboardButton
                         settingsButton
+                    }
+                    
+                    // NIEUW: GameCenter status indicator
+                    if gameCenterManager.isAuthenticated {
+                        HStack {
+                            Image(systemName: "gamecontroller.fill")
+                                .foregroundColor(.green)
+                            Text("GameCenter Connected")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.black.opacity(0.6))
+                        .cornerRadius(15)
+                    } else {
+                        HStack {
+                            Image(systemName: "gamecontroller")
+                                .foregroundColor(.orange)
+                            Text("GameCenter Connecting...")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.black.opacity(0.6))
+                        .cornerRadius(15)
+                        .opacity(0.7)
                     }
                 }
                 .padding(.top, 70.0)
@@ -58,7 +82,7 @@ struct HomeScreenView: View {
         ZStack {
             let position = CGPoint(
                 x: geometry.size.width / 2,
-                y: geometry.size.height * 0.25 // 25% from top (header position)
+                y: geometry.size.height * 0.25
             )
 
             Image("logo_forest_run")
@@ -98,7 +122,6 @@ struct HomeScreenView: View {
             )
             .padding(.leading, 30.0)
             .padding(.top, 35.0)
-
         }
     }
 
@@ -169,7 +192,8 @@ struct HomeScreenView: View {
         Button(action: {
             SoundManager.shared.playButtonTapSound()
             SoundManager.shared.lightHaptic()
-            onLeaderboardTapped()
+            // NIEUW: Show GameCenter leaderboards
+            levelManager.showLeaderboards()
         }) {
             EmptyView()
         }
@@ -180,12 +204,14 @@ struct HomeScreenView: View {
                 height: 70.0
             )
         )
+        .opacity(gameCenterManager.isAuthenticated ? 1.0 : 0.6) // Visual feedback
+        .animation(.easeInOut(duration: 0.3), value: gameCenterManager.isAuthenticated)
     }
 
     private var settingsButton: some View {
         Button(action: {
             SoundManager.shared.playButtonTapSound()
-            onSettingsTapped() // Nieuwe callback
+            onSettingsTapped()
         }) {
             EmptyView()
         }
@@ -210,7 +236,6 @@ struct HomeScreenView: View {
         } onSettingsTapped: {
             
         }
-
 }
 
 struct ImageButtonStyle: ButtonStyle {

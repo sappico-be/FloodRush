@@ -3,6 +3,7 @@ import Combine
 
 struct SettingsView: View {
     @ObservedObject private var soundManager = SoundManager.shared
+    @StateObject private var gameCenterManager = GameCenterManager.shared
     let onBack: () -> Void
     
     var body: some View {
@@ -32,6 +33,95 @@ struct SettingsView: View {
             
             // Settings content
             VStack(spacing: 20) {
+                // GameCenter section - NIEUW!
+                if gameCenterManager.isAuthenticated {
+                    SettingsSectionView(title: "GameCenter") {
+                        Button(action: {
+                            SoundManager.shared.playButtonTapSound()
+                            gameCenterManager.showAchievements()
+                        }) {
+                            HStack(spacing: 15) {
+                                Image(systemName: "trophy.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.yellow)
+                                    .frame(width: 30)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("View Achievements")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("See your unlocked achievements")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            SoundManager.shared.playButtonTapSound()
+                            gameCenterManager.showLeaderboards()
+                        }) {
+                            HStack(spacing: 15) {
+                                Image(systemName: "list.number")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                                    .frame(width: 30)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("View Leaderboards")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Compare your scores with others")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                } else {
+                    // GameCenter niet ingelogd
+                    SettingsSectionView(title: "GameCenter") {
+                        HStack(spacing: 15) {
+                            Image(systemName: "gamecontroller")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                                .frame(width: 30)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Not Connected")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Sign in to access achievements and leaderboards")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .opacity(0.6)
+                    }
+                }
+                
                 // Audio section
                 SettingsSectionView(title: "Audio") {
                     SettingsToggleRow(
@@ -40,6 +130,8 @@ struct SettingsView: View {
                         icon: "speaker.2.fill",
                         isOn: $soundManager.isSoundEnabled
                     )
+                    
+                    Divider()
                     
                     // Future: Music toggle
                     SettingsToggleRow(
@@ -59,7 +151,8 @@ struct SettingsView: View {
                         icon: "iphone.radiowaves.left.and.right",
                         isOn: $soundManager.isHapticEnabled
                     )
-                    .opacity(1.0)
+                    
+                    Divider()
                     
                     SettingsToggleRow(
                         title: "Auto-save Progress",
@@ -78,6 +171,8 @@ struct SettingsView: View {
                         icon: "info.circle"
                     )
                     
+                    Divider()
+                    
                     SettingsInfoRow(
                         title: "Developer",
                         value: "Sappico V.O.F.",
@@ -91,4 +186,8 @@ struct SettingsView: View {
         .padding(.top)
         .background(Color(.systemGroupedBackground))
     }
+}
+
+#Preview {
+    SettingsView(onBack: {})
 }

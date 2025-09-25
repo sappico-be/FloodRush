@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct HomeScreenView: View {
-    @ObservedObject var levelManager: LevelManager
+    @ObservedObject var levelManager: APILevelManager
     let onPlayTapped: () -> Void
     let onLevelPacksTapped: () -> Void
     let onLeaderboardTapped: () -> Void
@@ -227,7 +227,7 @@ struct HomeScreenView: View {
 
 #Preview {
     HomeScreenView(
-        levelManager: LevelManager()) {
+        levelManager: APILevelManager()) {
             
         } onLevelPacksTapped: {
             

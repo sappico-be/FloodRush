@@ -3,7 +3,7 @@ import SwiftUI
 struct MapLevelsView: View {
     let onBackTapped: () -> Void
     let onLevelSelected: (GameLevel) -> Void
-    @ObservedObject var levelManager: LevelManager
+    @ObservedObject var levelManager: APILevelManager
     let shouldAnimateToLevel: Bool // NIEUW: Should we animate to next level?
     let onAnimationComplete: () -> Void // NIEUW: Callback when animation is done
     
@@ -15,7 +15,7 @@ struct MapLevelsView: View {
     
     // Level posities als percentage van de kaart (x: 0-1, y: 0-1)
     private let levelPositions: [(x: Double, y: Double)] = [
-        (0.15, 1.24), (0.34, 1.17), (0.7, 0.82), (0.2, 0.75), (0.8, 0.68),
+        (0.15, 1.24), (0.34, 1.17), (0.66, 1.17), (0.85, 1.10), (0.8, 0.68),
         (0.4, 0.62), (0.6, 0.55), (0.25, 0.48), (0.75, 0.42), (0.5, 0.35),
         (0.35, 0.28), (0.65, 0.22), (0.2, 0.18), (0.8, 0.15), (0.45, 0.12),
         (0.55, 0.09), (0.3, 0.06), (0.7, 0.04), (0.4, 0.02), (0.6, 0.01)
@@ -303,7 +303,7 @@ struct MapLevelsView: View {
 
 struct MapLevelButton: View {
     let level: GameLevel
-    @ObservedObject var levelManager: LevelManager
+    @ObservedObject var levelManager: APILevelManager
     let isDisabled: Bool // NIEUW: External disable state
     let onTapped: () -> Void
     
@@ -375,7 +375,7 @@ struct MapLevelButton: View {
     MapLevelsView(
         onBackTapped: {},
         onLevelSelected: { _ in },
-        levelManager: LevelManager(),
+        levelManager: APILevelManager(),
         shouldAnimateToLevel: false,
         onAnimationComplete: {}
     )

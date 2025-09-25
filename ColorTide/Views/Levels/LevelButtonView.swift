@@ -2,7 +2,7 @@ import SwiftUI
 
 struct LevelButtonView: View {
     let level: GameLevel
-    let levelManager: LevelManager
+    let levelManager: APILevelManager
     let onTap: () -> Void
     
     private var isUnlocked: Bool {

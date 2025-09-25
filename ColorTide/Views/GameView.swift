@@ -4,7 +4,7 @@ struct GameView: View {
     @Environment(\.dismiss) private var dismiss
 
     @ObservedObject var viewModel: GameViewModel
-    let levelManager: LevelManager
+    let levelManager: APILevelManager
     let onBackToLevelSelect: (() -> Void)?
     let onBackToHomeTapped: (() -> Void)?
     let onNextLevelTapped: (() -> Void)? // NIEUW: Callback voor next level animatie
@@ -333,8 +333,8 @@ struct StrokeModifier: ViewModifier {
 
 #Preview {
     GameView(
-        viewModel: GameViewModel(levelManager: LevelManager()),
-        levelManager: LevelManager(),
+        viewModel: GameViewModel(levelManager: APILevelManager()),
+        levelManager: APILevelManager(),
         onBackToLevelSelect: {},
         onBackToHomeTapped: {},
         onNextLevelTapped: {}

@@ -4,10 +4,10 @@ import AVFoundation
 
 class GameViewModel: ObservableObject {
     @Published private(set) var gameState: GameState
-    let levelManager: LevelManager
+    let levelManager: APILevelManager
     private var usedUndo: Bool = false // NIEUW: Track undo usage
 
-    init(levelManager: LevelManager) {
+    init(levelManager: APILevelManager) {
         self.levelManager = levelManager
         let level = levelManager.currentLevel
         

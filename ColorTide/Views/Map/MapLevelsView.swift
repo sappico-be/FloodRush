@@ -9,16 +9,16 @@ struct MapLevelsView: View {
     
     @State private var scrollPosition = ScrollPosition(edge: .bottom)
     @State private var currentPage: Int = 0
-    @State private var playerPosition: CGPoint = .zero // NIEUW: Player position
-    @State private var showPlayer: Bool = false // NIEUW: Show player sprite
-    @State private var isAnimating: Bool = false // NIEUW: Animation state
+    @State private var playerPosition: CGPoint = .zero
+    @State private var showPlayer: Bool = false
+    @State private var isAnimating: Bool = false
     
     // Level posities als percentage van de kaart (x: 0-1, y: 0-1)
     private let levelPositions: [(x: Double, y: Double)] = [
-        (0.15, 1.24), (0.34, 1.17), (0.66, 1.17), (0.85, 1.10), (0.8, 0.68),
-        (0.4, 0.62), (0.6, 0.55), (0.25, 0.48), (0.75, 0.42), (0.5, 0.35),
-        (0.35, 0.28), (0.65, 0.22), (0.2, 0.18), (0.8, 0.15), (0.45, 0.12),
-        (0.55, 0.09), (0.3, 0.06), (0.7, 0.04), (0.4, 0.02), (0.6, 0.01)
+        (0.15, 1.24), (0.34, 1.17), (0.66, 1.17), (0.87, 1.10), (0.65, 1.045),
+        (0.37, 1.04), (0.62, 0.95), (0.35, 0.93), (0.27, 0.85), (0.5, 0.77),
+        (0.46, 0.69), (0.20, 0.67), (0.7, 0.645), (0.87, 0.57), (0.7, 0.535),
+        (0.40, 0.53), (0.55, 0.47), (0.7, 0.43), (0.25, 0.4), (0.35, 0.3)
     ]
     
     private var currentPageLevels: [GameLevel] {

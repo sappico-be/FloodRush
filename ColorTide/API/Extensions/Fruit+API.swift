@@ -34,4 +34,17 @@ extension Fruit {
         case .grapes: return "grapes"
         }
     }
+    
+    // NEW: Display names for target fruit
+    var displayName: String {
+        switch self {
+        case .nut: return "Nuts"
+        case .cherry: return "Cherries"
+        case .strawberry: return "Strawberries"
+        case .muchroom: return "Mushrooms"
+        case .berry: return "Berries"
+        case .clover: return "Clovers"
+        case .grapes: return "Grapes"
+        }
+    }
 }

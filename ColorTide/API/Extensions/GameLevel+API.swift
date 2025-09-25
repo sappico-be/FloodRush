@@ -4,11 +4,11 @@ import SwiftUI
 extension GameLevel {
     init(from apiLevel: APIGameLevel) {
         self.id = apiLevel.levelNumber
-        self.gridSize = apiLevel.safeGridSize
-        self.fruitCount = apiLevel.safeFruitCount
+        self.gridSize = apiLevel.safeGridSize       // Use safe accessor
+        self.fruitCount = apiLevel.safeFruitCount   // Use safe accessor
         self.startPosition = GridPosition(
-            row: apiLevel.safeStartPosition.row,
-            col: apiLevel.safeStartPosition.col
+            row: apiLevel.safeStartPosition.row,    // Use safe accessor
+            col: apiLevel.safeStartPosition.col     // Use safe accessor
         )
         
         // NEW: Convert target fruit string to Fruit enum
@@ -18,11 +18,11 @@ extension GameLevel {
             self.targetFruit = nil
         }
         
-        self.targetMoves = apiLevel.safeTargetMoves
-        self.baseScore = apiLevel.safeBaseScore
+        self.targetMoves = apiLevel.safeTargetMoves // Use safe accessor
+        self.baseScore = apiLevel.safeBaseScore     // Use safe accessor
         
         // Convert string array to Fruit array - handle empty grid
-        if !apiLevel.safePredefinedGrid.isEmpty {  
+        if !apiLevel.safePredefinedGrid.isEmpty {  // Use safe accessor
             self.predefinedGrid = apiLevel.safePredefinedGrid.map { row in
                 row.map { fruitString in
                     Fruit.from(string: fruitString)

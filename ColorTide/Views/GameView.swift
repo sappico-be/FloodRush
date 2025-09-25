@@ -216,14 +216,30 @@ struct GameView: View {
     private func playAreaContent(geometry: GeometryProxy) -> some View {
         VStack(spacing: 10.0) {
             HStack {
-                Color.clear
-                    .frame(width: 40.0, height: 40.0)
+                // LEFT: Target Fruit Indicator
+                TargetFruitIndicator(targetFruit: levelManager.currentLevel.targetFruit)
+                    .frame(width: 40.0, height: 60.0)
+                
                 Spacer()
-                Text("Level \(levelManager.currentLevel.id)")
-                    .font(.custom("helsinki", size: 30.0))
-                    .foregroundStyle(.white)
+                
+                // CENTER: Level Title
+                VStack(spacing: 2) {
+                    Text("Level \(levelManager.currentLevel.id)")
+                        .font(.custom("helsinki", size: 30.0))
+                        .foregroundStyle(.white)
+                    
+                    // Target fruit description (if any)
+                    if let targetFruit = levelManager.currentLevel.targetFruit {
+                        Text("Collect \(targetFruit.displayName)")
+                            .font(.custom("helsinki", size: 14.0))
+                            .foregroundStyle(.yellow)
+                            .shadow(color: .black, radius: 1)
+                    }
+                }
+                
                 Spacer()
 
+                // RIGHT: Undo Button
                 Button {
                     if viewModel.canUndo {
                         let _ = viewModel.undoLastMove()
@@ -240,6 +256,7 @@ struct GameView: View {
                 )
                 .disabled(!viewModel.canUndo)
             }
+            
             GridView(
                 gameState: viewModel.gameState
             )

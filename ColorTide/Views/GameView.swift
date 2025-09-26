@@ -179,7 +179,7 @@ struct GameView: View {
             
             // Color Picker
             ColorPickerView(
-                availableFruits: Array(GameState.availableFruits.prefix(viewModel.gameState.fruitCount)),
+                availableFruits: viewModel.availableFruits,
                 targetFruit: viewModel.gameState.targetFruit,
                 isDisabled: viewModel.gameState.isCompleted,
                 onFruitSelected: { fruit in

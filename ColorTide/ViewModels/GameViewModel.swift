@@ -6,6 +6,25 @@ class GameViewModel: ObservableObject {
     @Published private(set) var gameState: GameState
     let levelManager: APILevelManager
     private var usedUndo: Bool = false // NIEUW: Track undo usage
+    
+    var availableFruits: [Fruit] {
+        // Verzamel alle unieke fruiten die daadwerkelijk in het grid voorkomen
+        var uniqueFruits = Set<Fruit>()
+        for row in gameState.grid {
+            for fruit in row {
+                uniqueFruits.insert(fruit)
+            }
+        }
+        
+        // Sorteer voor consistente volgorde (optioneel)
+        return Array(uniqueFruits).sorted { fruit1, fruit2 in
+            // Sorteer op basis van de originele volgorde
+            let order: [Fruit] = [.nut, .cherry, .strawberry, .muchroom, .berry, .clover, .grapes]
+            let index1 = order.firstIndex(of: fruit1) ?? 999
+            let index2 = order.firstIndex(of: fruit2) ?? 999
+            return index1 < index2
+        }
+    }
 
     init(levelManager: APILevelManager) {
         self.levelManager = levelManager

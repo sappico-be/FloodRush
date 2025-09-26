@@ -30,40 +30,49 @@ struct MapLevelsView: View {
         return (levelManager.getTotalLevelCount() + 20 - 1) / 20
     }
     
+    // Add ScrollViewReader for programmatic scrolling
+    @State private var scrollProxy: ScrollViewProxy?
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .topLeading) {
-                // Background map met scroll
-                ScrollView {
-                    ZStack {
-                        Image("map-background")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geometry.size.width)
-                            .clipped()
-                            .overlay {
-                                levelButtonsOverlay(in: geometry.size)
-                            }
-                            .overlay {
-                                // NIEUW: Player sprite overlay
-                                if showPlayer {
-                                    playerSprite
-                                        .position(playerPosition)
-                                        .animation(.easeInOut(duration: 2.0), value: playerPosition)
+                // Background map met scroll - Add ScrollViewReader
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        ZStack {
+                            Image("map-background")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: geometry.size.width)
+                                .clipped()
+                                .overlay {
+                                    levelButtonsOverlay(in: geometry.size)
                                 }
-                            }
+                                .overlay {
+                                    if showPlayer {
+                                        playerSprite
+                                            .position(playerPosition)
+                                            .animation(.easeInOut(duration: 2.0), value: playerPosition)
+                                    }
+                                }
+                                .id("mapBackground") // Add ID for scrolling reference
+                        }
                     }
-                }
-                .scrollIndicators(.hidden)
-                .scrollDisabled(true)
-                .scrollPosition($scrollPosition)
-                .onAppear {
-                    scrollPosition.scrollTo(edge: .bottom)
-                    
-                    // NIEUW: Start animation if needed
-                    if shouldAnimateToLevel {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            startPlayerAnimation(in: geometry.size)
+                    .scrollIndicators(.hidden)
+                    .scrollDisabled(isAnimating) // Disable manual scroll during animation
+                    .scrollPosition($scrollPosition)
+                    .onAppear {
+                        scrollPosition.scrollTo(edge: .bottom)
+                        
+                        // Store the proxy for later use
+                        DispatchQueue.main.async {
+                            self.scrollProxy = proxy
+                        }
+                        
+                        if shouldAnimateToLevel {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                startPlayerAnimation(in: geometry.size, scrollProxy: proxy)
+                            }
                         }
                     }
                 }
@@ -101,8 +110,8 @@ struct MapLevelsView: View {
         }
     }
     
-    // NIEUW: Start player animation to next level
-    private func startPlayerAnimation(in size: CGSize) {
+    // UPDATED: Start player animation with scroll support
+    private func startPlayerAnimation(in size: CGSize, scrollProxy: ScrollViewProxy) {
         guard let currentLevel = getCurrentLevel(),
               let nextLevel = levelManager.nextLevel() else {
             onAnimationComplete()
@@ -133,9 +142,13 @@ struct MapLevelsView: View {
         isAnimating = true
         
         // Play sound
-        SoundManager.shared.playSuccessSound()
+//        SoundManager.shared.playSuccessSound()
         
-        // Animate to next level
+        // Calculate if we need to scroll based on next level position
+        let nextLevelScreenY = size.height * nextPos.y
+        let needsScroll = nextLevelScreenY > size.height * 0.7 // If next level is in bottom 30% of screen
+        
+        // Start player movement
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeInOut(duration: 2.0)) {
                 playerPosition = CGPoint(
@@ -143,10 +156,26 @@ struct MapLevelsView: View {
                     y: size.height * nextPos.y
                 )
             }
+            
+            // Animate map scroll if needed
+            if needsScroll {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation(.easeInOut(duration: 1.5)) {
+                        // Calculate scroll target based on next level position
+                        let targetScrollY = max(0, nextLevelScreenY - size.height * 0.5)
+                        
+                        // Use ScrollViewReader to scroll to position
+                        scrollProxy.scrollTo("mapBackground", anchor: UnitPoint(
+                            x: 0.5,
+                            y: targetScrollY / size.height
+                        ))
+                    }
+                }
+            }
         }
         
         // Complete animation and auto-select next level
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.3) { // Slightly longer to account for scroll
             isAnimating = false
             
             // Flash effect on arrival
